@@ -2,21 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>English Movies</title>
   <link rel="manifest" href="manifest.json">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     :root {
-      --bg:     #0a0a0a;
-      --surface:#141414;
-      --border: #1e1e1e;
-      --text:   #e8e8e8;
-      --muted:  #555;
-      --accent: #e8b84b;
+      --bg:      #0a0a0a;
+      --surface: #141414;
+      --border:  #1e1e1e;
+      --border2: #252525;
+      --text:    #e8e8e8;
+      --muted:   #555;
+      --faint:   #1a1a1a;
+      --accent:  #e8b84b;
+      --green:   #4bae8a;
+      --blue:    #4a9eba;
+      --red:     #d95f5f;
     }
 
     body {
@@ -24,176 +30,643 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
+      overscroll-behavior: none;
     }
 
+    /* ── HEADER ── */
     header {
-      padding: 52px 20px 28px;
+      padding: 48px 20px 20px;
     }
+    header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { font-size: 13px; color: var(--muted); margin-top: 5px; }
 
-    header h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.5px;
-    }
-
-    header p {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 6px;
-    }
-
-    .section-title {
-      padding: 4px 20px 12px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #333;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-    }
-
-    .movies {
-      padding: 0 16px 40px;
+    /* ── TABS ── */
+    .tabs {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20;
+      background: var(--bg);
     }
+    .tab-btn {
+      flex: 1;
+      height: 44px;
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-badge {
+      position: absolute; top: 6px; right: 10px;
+      background: var(--accent); color: #0a0a0a;
+      font-size: 9px; font-weight: 800;
+      border-radius: 10px; padding: 1px 4px;
+      min-width: 14px; text-align: center; line-height: 1.4;
+    }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── SCRIPTS VIEW ── */
+    .section-label {
+      padding: 16px 20px 10px;
+      font-size: 11px; font-weight: 700; color: #333;
+      text-transform: uppercase; letter-spacing: 1.2px;
+    }
+    .movies { padding: 0 12px 40px; display: flex; flex-direction: column; gap: 10px; }
 
     .movie-card {
       background: var(--surface);
-      border-radius: 14px;
-      padding: 18px 16px 18px 18px;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      border-radius: 14px; padding: 16px 14px 16px 16px;
+      text-decoration: none; color: inherit;
+      display: flex; align-items: center; gap: 14px;
       border: 1px solid var(--border);
       transition: background 0.12s;
     }
-
     .movie-card:active { background: #1a1a1a; }
-
     .movie-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      background: #1e1a0e;
-      border: 1px solid #2a2010;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 46px; height: 46px; border-radius: 10px;
+      background: #1e1a0e; border: 1px solid #2a2010;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     }
-
     .movie-icon svg { width: 22px; height: 22px; fill: var(--accent); opacity: 0.8; }
-
     .movie-info { flex: 1; min-width: 0; }
-
-    .movie-info h2 {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .movie-info p {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .movie-lines {
-      font-size: 12px;
-      color: #383828;
-      margin-top: 6px;
-      font-weight: 500;
-    }
-
+    .movie-info h2  { font-size: 15px; font-weight: 600; }
+    .movie-info p   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .movie-lines    { font-size: 12px; color: #383828; margin-top: 5px; font-weight: 500; }
     .movie-lines.loaded { color: var(--accent); }
+    .chevron { color: #2a2a2a; font-size: 20px; flex-shrink: 0; }
 
-    .chevron {
-      color: #252525;
-      font-size: 20px;
-      flex-shrink: 0;
+    /* ── ALMACÉN VIEW ── */
+    .vocab-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
     }
+    .vocab-toolbar-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .vocab-toolbar-actions { display: flex; gap: 8px; align-items: center; }
 
-    .ipa-card {
-      background: #0d1014;
-      border: 1px solid #1a2030;
-      border-radius: 14px;
-      padding: 18px 16px 18px 18px;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: background 0.12s;
+    .btn-google {
+      padding: 8px 12px; border-radius: 8px;
+      background: #1a1a1a; border: 1px solid var(--border2);
+      color: #aaa; font-size: 12px; font-weight: 600; cursor: pointer;
     }
-    .ipa-card:active { background: #111620; }
-    .ipa-icon {
-      width: 48px; height: 48px;
-      border-radius: 10px;
-      background: #0d1620;
-      border: 1px solid #1a2a40;
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: Georgia, serif;
-      font-size: 22px;
-      color: #4a9eba;
+    .btn-google:active { background: #222; }
+    .btn-google.connected { color: var(--green); border-color: #1a3a2a; background: #0d1f16; }
+    .btn-sync {
+      padding: 8px 12px; border-radius: 8px;
+      background: #2a1f00; border: 1px solid var(--accent);
+      color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer;
     }
-    .ipa-info { flex: 1; }
-    .ipa-info h2 { font-size: 15px; font-weight: 600; color: var(--text); }
-    .ipa-info p  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .btn-sync:active { opacity: 0.8; }
+    .btn-sync:disabled { opacity: 0.4; cursor: default; }
+
+    .vocab-list { padding: 8px 0 60px; }
+    .vocab-empty {
+      padding: 48px 32px; text-align: center;
+      color: #333; font-size: 14px; line-height: 1.9;
+    }
+    .vocab-empty strong { color: #555; display: block; font-size: 16px; margin-bottom: 8px; }
+
+    .vocab-card {
+      margin: 8px 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .vc-top  { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .vc-text { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1.3; flex: 1; }
+    .vc-delete { background: none; border: none; color: #2a2a2a; font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+    .vc-delete:active { color: var(--red); }
+    .vc-pos     { font-size: 11px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .vc-meaning { font-size: 14px; color: var(--accent); font-weight: 500; line-height: 1.4; }
+    .vc-ipa     { font-size: 12px; color: #555; font-style: italic; font-family: Georgia, serif; }
+    .vc-note    { font-size: 12px; color: #3a3a3a; line-height: 1.4; }
+    .vc-example { font-size: 12px; color: #444; font-style: italic; line-height: 1.4; border-left: 2px solid var(--border2); padding-left: 8px; margin-top: 2px; }
+    .vc-extrans { font-size: 11px; color: #383838; padding-left: 10px; }
+    .vc-meta    { font-size: 10px; color: #2a2a2a; margin-top: 2px; }
+
+    /* ── IPA VIEW ── */
+    .ipa-intro {
+      padding: 16px 16px 8px;
+      font-size: 13px; color: #555; line-height: 1.7;
+    }
+    .ipa-intro strong { color: #777; }
+    .ipa-tip {
+      margin: 8px 12px 4px;
+      padding: 11px 13px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; font-size: 12px; color: #444; line-height: 1.6;
+    }
+    .ipa-tip strong { color: #666; display: block; margin-bottom: 3px; }
+    .ipa-section-label {
+      padding: 18px 16px 8px;
+      font-size: 11px; font-weight: 700; color: #2a2a2a;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      border-top: 1px solid var(--border);
+    }
+    .phoneme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px; padding: 0 12px 8px;
+    }
+    .phoneme-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 13px 13px 11px;
+      display: flex; flex-direction: column; gap: 7px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .phoneme-card:active { background: #1c1c1c; }
+    .phoneme-card.playing { border-color: var(--accent); background: #1a1400; }
+    .ph-top { display: flex; align-items: center; justify-content: space-between; }
+    .ph-symbol { font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: var(--accent); line-height: 1; }
+    .ph-symbol.consonant { color: var(--blue); }
+    .ph-play {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--faint); border: 1px solid var(--border2);
+      color: #444; font-size: 11px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .phoneme-card.playing .ph-play { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+    .ph-word { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .ph-word mark { background: none; color: var(--accent); font-weight: 800; text-decoration: underline; text-decoration-color: rgba(232,184,75,0.4); }
+    .ph-word.consonant mark { color: var(--blue); text-decoration-color: rgba(74,158,186,0.4); }
+    .ph-translation { font-size: 10px; color: var(--muted); }
+    .ph-examples { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 1px; }
+    .ph-ex {
+      font-size: 10px; background: var(--faint); border: 1px solid var(--border2);
+      border-radius: 5px; padding: 2px 6px; color: #555; cursor: pointer;
+    }
+    .ph-ex:active { color: var(--accent); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e1e1e; color: var(--text);
+      padding: 10px 18px; border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s;
+      z-index: 999; pointer-events: none;
+      white-space: nowrap; border: 1px solid #2a2a2a;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .bottom-space { height: 40px; }
   </style>
 </head>
 <body>
+
   <header>
     <h1>English Movies</h1>
-    <p>Study real movie scripts with grammar and phonetics</p>
+    <p>Aprendé inglés con scripts de películas reales</p>
   </header>
 
-  <div class="section-title">Referencia</div>
-  <div class="movies">
-    <a href="ipa.html" class="ipa-card">
-      <div class="ipa-icon">/ɪ/</div>
-      <div class="ipa-info">
-        <h2>Guía de Fonética IPA</h2>
-        <p>44 fonemas · audio · ejemplos por sonido</p>
-      </div>
-      <span class="chevron">›</span>
-    </a>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('scripts')" id="tab-scripts">Scripts</button>
+    <button class="tab-btn" onclick="switchTab('almacen')" id="tab-almacen">
+      Almacén<span class="tab-badge" id="vocab-badge"></span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('ipa')" id="tab-ipa">IPA</button>
   </div>
 
-  <div class="section-title">Películas</div>
-
-  <div class="movies" id="movies-list">
-    <a href="viewer.html?movie=patch_adams" class="movie-card" id="card-patch_adams">
-      <div class="movie-icon">
-        <svg viewBox="0 0 24 24"><path d="M18 4H6C4.9 4 4 4.9 4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-2 10.5v-5l4 2.5-4 2.5z"/></svg>
-      </div>
-      <div class="movie-info">
-        <h2>Patch Adams</h2>
-        <p>1998 · Drama · Robin Williams</p>
-        <div class="movie-lines" id="lines-patch_adams">Loading...</div>
-      </div>
-      <span class="chevron">›</span>
-    </a>
+  <!-- ── SCRIPTS ── -->
+  <div class="view active" id="view-scripts">
+    <div class="section-label">Disponibles</div>
+    <div class="movies" id="movies-list">
+      <a href="viewer.html?movie=patch_adams" class="movie-card" id="card-patch_adams">
+        <div class="movie-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 4H6C4.9 4 4 4.9 4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-2 10.5v-5l4 2.5-4 2.5z"/></svg>
+        </div>
+        <div class="movie-info">
+          <h2>Patch Adams</h2>
+          <p>1998 · Drama · Robin Williams</p>
+          <div class="movie-lines" id="lines-patch_adams">Cargando...</div>
+        </div>
+        <span class="chevron">›</span>
+      </a>
+    </div>
+    <div class="bottom-space"></div>
   </div>
+
+  <!-- ── ALMACÉN ── -->
+  <div class="view" id="view-almacen">
+    <div class="vocab-toolbar">
+      <span class="vocab-toolbar-title">Mi Almacén</span>
+      <div class="vocab-toolbar-actions">
+        <button class="btn-sync" id="vocab-sync-btn" style="display:none" onclick="syncVocabToSheets()">↑ Sheets</button>
+        <button class="btn-google" id="google-login-btn" onclick="handleGoogleBtn()">Gmail</button>
+      </div>
+    </div>
+    <div class="vocab-list" id="vocab-list"></div>
+  </div>
+
+  <!-- ── IPA ── -->
+  <div class="view" id="view-ipa">
+    <div class="ipa-intro">
+      El <strong>IPA</strong> representa exactamente cómo suena cada fonema del inglés. Tocá el símbolo para escucharlo, o las palabras de ejemplo para escucharlas completas.
+    </div>
+    <div class="ipa-tip">
+      <strong>Cómo usar</strong>
+      Tocá el círculo ▶ para escuchar el fonema. Tocá las palabras grises para escuchar el ejemplo. El sonido resaltado muestra dónde aparece el fonema.
+    </div>
+
+    <div class="ipa-section-label">Vocales puras</div>
+    <div class="phoneme-grid" id="grid-vowels"></div>
+
+    <div class="ipa-section-label">Diptongos</div>
+    <div class="phoneme-grid" id="grid-diphthongs"></div>
+
+    <div class="ipa-section-label">Consonantes</div>
+    <div class="phoneme-grid" id="grid-consonants"></div>
+
+    <div class="bottom-space"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
   <script>
-    const movies = ['patch_adams'];
+    // ══════════════════════════════════════════
+    // CONSTANTS
+    // ══════════════════════════════════════════
+    const GOOGLE_CLIENT_ID = '280226154553-104j0pu65emtsjm6htelsrq4i3ssjln1.apps.googleusercontent.com';
+    const GOOGLE_SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email';
 
+    // ══════════════════════════════════════════
+    // TABS
+    // ══════════════════════════════════════════
+    function switchTab(tab) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-' + tab).classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'almacen') renderVocab();
+      if (tab === 'ipa')     renderIPA();
+    }
+
+    // ══════════════════════════════════════════
+    // MOVIES
+    // ══════════════════════════════════════════
+    const movies = ['patch_adams'];
     movies.forEach(async id => {
       try {
         const res  = await fetch(`data/${id}.json`);
         const data = await res.json();
         const el   = document.getElementById('lines-' + id);
-        if (el) {
-          el.textContent = `${data.lines.length.toLocaleString()} lines`;
-          el.classList.add('loaded');
-        }
+        if (el) { el.textContent = `${data.lines.length.toLocaleString()} líneas`; el.classList.add('loaded'); }
       } catch {}
     });
+
+    // ══════════════════════════════════════════
+    // VOCAB (ALMACÉN)
+    // ══════════════════════════════════════════
+    function getVocabItems() {
+      try { return JSON.parse(localStorage.getItem('vocab_items') || '[]'); }
+      catch { return []; }
+    }
+
+    function saveVocabItems(items) {
+      localStorage.setItem('vocab_items', JSON.stringify(items));
+      updateVocabBadge();
+    }
+
+    function deleteVocabItem(id) {
+      saveVocabItems(getVocabItems().filter(i => String(i.id) !== String(id)));
+      renderVocab();
+    }
+
+    function updateVocabBadge() {
+      const count = getVocabItems().length;
+      const badge = document.getElementById('vocab-badge');
+      if (badge) badge.textContent = count > 0 ? count : '';
+    }
+
+    function renderVocab() {
+      const items = getVocabItems();
+      const el    = document.getElementById('vocab-list');
+      if (!el) return;
+      if (items.length === 0) {
+        el.innerHTML = `<div class="vocab-empty">
+          <strong>Tu almacén está vacío</strong>
+          Abrí una película, seleccioná líneas que no entiendas,<br>analizalas y guardá las palabras o frases.
+        </div>`;
+        return;
+      }
+      el.innerHTML = items.map(item => `
+        <div class="vocab-card">
+          <div class="vc-top">
+            <span class="vc-text">${esc(item.text)}</span>
+            <button class="vc-delete" onclick="deleteVocabItem('${item.id}')">×</button>
+          </div>
+          ${item.pos     ? `<div class="vc-pos">${esc(item.pos)}</div>` : ''}
+          ${item.meaning ? `<div class="vc-meaning">${esc(item.meaning)}</div>` : ''}
+          ${item.phonetic ? `<div class="vc-ipa">/ ${esc(item.phonetic)} /</div>` : ''}
+          ${item.note && item.note !== item.meaning ? `<div class="vc-note">${esc(item.note)}</div>` : ''}
+          ${item.example && item.example !== item.text ? `
+            <div class="vc-example">"${esc(item.example)}"</div>
+            ${item.exampleTranslation ? `<div class="vc-extrans">${esc(item.exampleTranslation)}</div>` : ''}
+          ` : ''}
+          <div class="vc-meta">${esc(item.movie || '')} · línea ${item.lineId || ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // ══════════════════════════════════════════
+    // GOOGLE AUTH — inicialización lazy
+    // ══════════════════════════════════════════
+    let tokenClient = null;
+    let googleToken = null;
+    let googleUser  = null;
+
+    function ensureTokenClient() {
+      if (tokenClient) return true;
+      if (typeof google === 'undefined' || !google.accounts?.oauth2) return false;
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPES,
+        callback: handleGoogleToken
+      });
+      return true;
+    }
+
+    function handleGoogleBtn() {
+      if (googleToken) {
+        // Logout
+        googleToken = null; googleUser = null;
+        localStorage.removeItem('google_email');
+        updateGoogleUI();
+        showToast('Sesión cerrada');
+        return;
+      }
+
+      // Intentar inicializar si todavía no está listo
+      if (ensureTokenClient()) {
+        tokenClient.requestAccessToken();
+      } else {
+        // GIS aún cargando — reintentar con feedback visual
+        const btn = document.getElementById('google-login-btn');
+        btn.textContent = 'Cargando...';
+        btn.disabled = true;
+        let tries = 0;
+        const interval = setInterval(() => {
+          tries++;
+          if (ensureTokenClient()) {
+            clearInterval(interval);
+            btn.textContent = localStorage.getItem('google_email') || 'Gmail';
+            btn.disabled = false;
+            tokenClient.requestAccessToken();
+          } else if (tries > 15) {
+            clearInterval(interval);
+            btn.textContent = 'Gmail';
+            btn.disabled = false;
+            showToast('Sin conexión — Google no disponible');
+          }
+        }, 300);
+      }
+    }
+
+    async function handleGoogleToken(resp) {
+      if (resp.error) { showToast('Error de autenticación'); return; }
+      googleToken = resp.access_token;
+      try {
+        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${googleToken}` }
+        });
+        googleUser = await r.json();
+        localStorage.setItem('google_email', googleUser.email);
+        updateGoogleUI();
+        showToast('Conectado como ' + googleUser.email);
+      } catch { showToast('Error al obtener datos de usuario'); }
+    }
+
+    function updateGoogleUI() {
+      const loginBtn = document.getElementById('google-login-btn');
+      const syncBtn  = document.getElementById('vocab-sync-btn');
+      if (!loginBtn) return;
+      const email = googleUser?.email || localStorage.getItem('google_email');
+      if (googleToken) {
+        loginBtn.textContent = email ? email.split('@')[0] : 'Conectado';
+        loginBtn.classList.add('connected');
+        if (syncBtn) syncBtn.style.display = '';
+      } else {
+        loginBtn.textContent = email ? `↺ ${email.split('@')[0]}` : 'Gmail';
+        loginBtn.classList.remove('connected');
+        if (syncBtn) syncBtn.style.display = 'none';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // GOOGLE SHEETS SYNC
+    // ══════════════════════════════════════════
+    async function syncVocabToSheets() {
+      if (!googleToken) { showToast('Conectate con Gmail primero'); return; }
+      const items = getVocabItems();
+      if (items.length === 0) { showToast('El almacén está vacío'); return; }
+
+      const syncBtn = document.getElementById('vocab-sync-btn');
+      syncBtn.disabled = true;
+      showToast('Sincronizando...');
+
+      try {
+        let sheetId = localStorage.getItem('vocab_sheet_id');
+        if (!sheetId) {
+          const res = await sheetsReq('spreadsheets', 'POST', {
+            properties: { title: 'English Movies — Vocabulario' },
+            sheets: [{ properties: { title: 'Almacén' } }]
+          });
+          sheetId = res.spreadsheetId;
+          localStorage.setItem('vocab_sheet_id', sheetId);
+        }
+
+        const headers = [['Palabra/Frase','Significado','Categoría','IPA','Ejemplo EN','Ejemplo ES','Nota','Película','Línea','Fecha']];
+        const rows = items.map(it => [
+          it.text || '', it.meaning || '', it.pos || '', it.phonetic || '',
+          it.example || '', it.exampleTranslation || '', it.note || '',
+          it.movie || '', `L${it.lineId || ''}`,
+          it.savedAt ? new Date(it.savedAt).toLocaleDateString('es') : ''
+        ]);
+
+        await sheetsReq(`spreadsheets/${sheetId}/values/A1:J${rows.length + 10}:clear`, 'POST', {});
+        await sheetsReq(`spreadsheets/${sheetId}/values/A1:J${rows.length + 1}?valueInputOption=RAW`, 'PUT', {
+          values: [...headers, ...rows]
+        });
+
+        showToast(`✓ ${items.length} palabras sincronizadas`);
+      } catch(err) {
+        showToast('Error: ' + err.message);
+      }
+      syncBtn.disabled = false;
+    }
+
+    async function sheetsReq(path, method, body) {
+      const res = await fetch(`https://sheets.googleapis.com/v4/${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${googleToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data;
+    }
+
+    // ══════════════════════════════════════════
+    // IPA
+    // ══════════════════════════════════════════
+    const VOWELS = [
+      { symbol:'iː', speak:'eeee',  word:'<mark>ee</mark>l',    wordSpeak:'eel',    trans:'i larga',    examples:['see','feet','tree'] },
+      { symbol:'ɪ',  speak:'ih',    word:'s<mark>i</mark>t',    wordSpeak:'sit',    trans:'i corta',    examples:['bit','win','fish'] },
+      { symbol:'e',  speak:'eh',    word:'b<mark>e</mark>d',    wordSpeak:'bed',    trans:'e',          examples:['red','let','pen'] },
+      { symbol:'æ',  speak:'aah',   word:'c<mark>a</mark>t',    wordSpeak:'cat',    trans:'entre a/e',  examples:['bad','man','hat'] },
+      { symbol:'ɑː', speak:'ahhh',  word:'f<mark>a</mark>ther', wordSpeak:'father', trans:'a larga',    examples:['palm','car','bar'] },
+      { symbol:'ɒ',  speak:'oh',    word:'h<mark>o</mark>t',    wordSpeak:'hot',    trans:'o breve',    examples:['dog','not','lot'] },
+      { symbol:'ɔː', speak:'awww',  word:'l<mark>aw</mark>',    wordSpeak:'law',    trans:'o larga',    examples:['all','more','door'] },
+      { symbol:'ʊ',  speak:'uh',    word:'b<mark>oo</mark>k',   wordSpeak:'book',   trans:'u corta',    examples:['put','good','full'] },
+      { symbol:'uː', speak:'oooo',  word:'f<mark>oo</mark>d',   wordSpeak:'food',   trans:'u larga',    examples:['blue','moon','two'] },
+      { symbol:'ʌ',  speak:'uh',    word:'c<mark>u</mark>p',    wordSpeak:'cup',    trans:'a neutra',   examples:['bus','love','run'] },
+      { symbol:'ɜː', speak:'errr',  word:'b<mark>ir</mark>d',   wordSpeak:'bird',   trans:'e larga',    examples:['her','word','turn'] },
+      { symbol:'ə',  speak:'uh',    word:'<mark>a</mark>bout',  wordSpeak:'about',  trans:'schwa',      examples:['the','teacher','sofa'] },
+    ];
+    const DIPHTHONGS = [
+      { symbol:'eɪ', speak:'ay',    word:'d<mark>ay</mark>',    wordSpeak:'day',    trans:'ei',  examples:['rain','they','say'] },
+      { symbol:'aɪ', speak:'eye',   word:'n<mark>igh</mark>t',  wordSpeak:'night',  trans:'ai',  examples:['my','time','high'] },
+      { symbol:'ɔɪ', speak:'oy',    word:'b<mark>oy</mark>',    wordSpeak:'boy',    trans:'oi',  examples:['oil','coin','joy'] },
+      { symbol:'aʊ', speak:'ow',    word:'n<mark>ow</mark>',    wordSpeak:'now',    trans:'au',  examples:['out','how','town'] },
+      { symbol:'əʊ', speak:'oh',    word:'g<mark>o</mark>',     wordSpeak:'go',     trans:'ou',  examples:['home','show','know'] },
+      { symbol:'ɪə', speak:'ear',   word:'h<mark>ere</mark>',   wordSpeak:'here',   trans:'ie',  examples:['ear','fear','near'] },
+      { symbol:'eə', speak:'air',   word:'h<mark>air</mark>',   wordSpeak:'hair',   trans:'ea',  examples:['there','care','bare'] },
+      { symbol:'ʊə', speak:'oor',   word:'p<mark>ure</mark>',   wordSpeak:'pure',   trans:'ua',  examples:['tour','sure','cure'] },
+    ];
+    const CONSONANTS = [
+      { symbol:'p',  speak:'p',    word:'<mark>p</mark>en',    wordSpeak:'pen',    trans:'p sin voz',     examples:['pig','cap','play'] },
+      { symbol:'b',  speak:'b',    word:'<mark>b</mark>ad',    wordSpeak:'bad',    trans:'b',             examples:['big','lab','job'] },
+      { symbol:'t',  speak:'t',    word:'<mark>t</mark>en',    wordSpeak:'ten',    trans:'t',             examples:['top','cat','let'] },
+      { symbol:'d',  speak:'d',    word:'<mark>d</mark>og',    wordSpeak:'dog',    trans:'d',             examples:['day','red','bad'] },
+      { symbol:'k',  speak:'k',    word:'<mark>c</mark>at',    wordSpeak:'cat',    trans:'k',             examples:['key','back','clock'] },
+      { symbol:'g',  speak:'g',    word:'<mark>g</mark>et',    wordSpeak:'get',    trans:'g',             examples:['big','go','give'] },
+      { symbol:'f',  speak:'fff',  word:'<mark>f</mark>ish',   wordSpeak:'fish',   trans:'f',             examples:['off','fine','phone'] },
+      { symbol:'v',  speak:'vvv',  word:'<mark>v</mark>oice',  wordSpeak:'voice',  trans:'v sonora',      examples:['van','love','very'] },
+      { symbol:'θ',  speak:'th',   word:'<mark>th</mark>ink',  wordSpeak:'think',  trans:'th sordo',      examples:['bath','thin','tooth'] },
+      { symbol:'ð',  speak:'th',   word:'<mark>th</mark>is',   wordSpeak:'this',   trans:'th sonoro',     examples:['the','that','mother'] },
+      { symbol:'s',  speak:'sss',  word:'<mark>s</mark>ee',    wordSpeak:'see',    trans:'s',             examples:['sun','miss','yes'] },
+      { symbol:'z',  speak:'zzz',  word:'<mark>z</mark>oo',    wordSpeak:'zoo',    trans:'z sonora',      examples:['zero','his','jazz'] },
+      { symbol:'ʃ',  speak:'sh',   word:'<mark>sh</mark>e',    wordSpeak:'she',    trans:'sh',            examples:['shoe','cash','fish'] },
+      { symbol:'ʒ',  speak:'zh',   word:'vi<mark>si</mark>on', wordSpeak:'vision', trans:'zh',            examples:['pleasure','usual'] },
+      { symbol:'h',  speak:'h',    word:'<mark>h</mark>at',    wordSpeak:'hat',    trans:'h aspirada',    examples:['hot','who','ahead'] },
+      { symbol:'tʃ', speak:'ch',   word:'<mark>ch</mark>in',   wordSpeak:'chin',   trans:'ch',            examples:['watch','chat','teach'] },
+      { symbol:'dʒ', speak:'j',    word:'<mark>j</mark>am',    wordSpeak:'jam',    trans:'dj',            examples:['judge','age','just'] },
+      { symbol:'m',  speak:'mmm',  word:'<mark>m</mark>an',    wordSpeak:'man',    trans:'m',             examples:['map','him','summer'] },
+      { symbol:'n',  speak:'nnn',  word:'<mark>n</mark>ow',    wordSpeak:'now',    trans:'n',             examples:['not','sun','many'] },
+      { symbol:'ŋ',  speak:'ng',   word:'si<mark>ng</mark>',   wordSpeak:'sing',   trans:'ng',            examples:['ring','bank','long'] },
+      { symbol:'l',  speak:'lll',  word:'<mark>l</mark>eg',    wordSpeak:'leg',    trans:'l',             examples:['let','bell','play'] },
+      { symbol:'r',  speak:'r',    word:'<mark>r</mark>ed',    wordSpeak:'red',    trans:'r americana',   examples:['run','car','great'] },
+      { symbol:'j',  speak:'y',    word:'<mark>y</mark>es',    wordSpeak:'yes',    trans:'y',             examples:['year','you','use'] },
+      { symbol:'w',  speak:'w',    word:'<mark>w</mark>et',    wordSpeak:'wet',    trans:'w',             examples:['win','when','where'] },
+    ];
+
+    let ipaRendered = false;
+    function renderIPA() {
+      if (ipaRendered) return;
+      ipaRendered = true;
+      renderPhonemes(VOWELS,     'grid-vowels',     false);
+      renderPhonemes(DIPHTHONGS, 'grid-diphthongs', false);
+      renderPhonemes(CONSONANTS, 'grid-consonants', true);
+      // Prevent example clicks from triggering card click
+      document.querySelectorAll('.ph-ex').forEach(el =>
+        el.addEventListener('click', e => e.stopPropagation())
+      );
+    }
+
+    function renderPhonemes(data, gridId, isConsonant) {
+      document.getElementById(gridId).innerHTML = data.map((ph, i) => `
+        <div class="phoneme-card" id="phcard-${gridId}-${i}" onclick="playPhoneme(this,'${ph.speak}')">
+          <div class="ph-top">
+            <span class="ph-symbol ${isConsonant ? 'consonant' : ''}">/${ph.symbol}/</span>
+            <div class="ph-play">▶</div>
+          </div>
+          <div class="ph-word ${isConsonant ? 'consonant' : ''}">${ph.word}</div>
+          <div class="ph-translation">${ph.trans}</div>
+          <div class="ph-examples">
+            ${ph.examples.map(w => `<span class="ph-ex" onclick="playWord('${w}')">${w}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Speech ──
+    let voices = [];
+    function loadVoices() { voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+    loadVoices();
+    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    let speechUnlocked = false;
+    function unlockSpeech() {
+      if (speechUnlocked || !window.speechSynthesis) return;
+      speechUnlocked = true;
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
+    document.addEventListener('touchstart', unlockSpeech, { once: true, passive: true });
+    document.addEventListener('click', unlockSpeech, { once: true });
+
+    function speak(text, onEnd) {
+      if (window.AndroidTTS) {
+        window.AndroidTTS.speak(text);
+        if (onEnd) setTimeout(onEnd, Math.max(800, text.length * 60));
+        return;
+      }
+      if (!window.speechSynthesis) return;
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) window.speechSynthesis.cancel();
+      if (voices.length === 0) voices = window.speechSynthesis.getVoices();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.82; u.pitch = 1;
+      const v = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en'));
+      if (v) u.voice = v;
+      u.onend = () => { if (onEnd) onEnd(); };
+      u.onerror = () => { if (onEnd) onEnd(); };
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(u);
+    }
+
+    function playPhoneme(cardEl, speakText) {
+      document.querySelectorAll('.phoneme-card.playing').forEach(c => c.classList.remove('playing'));
+      cardEl.classList.add('playing');
+      speak(speakText, () => cardEl.classList.remove('playing'));
+    }
+
+    function playWord(word) { speak(word); }
+
+    // ══════════════════════════════════════════
+    // UTILS
+    // ══════════════════════════════════════════
+    function esc(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // ══════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════
+    updateVocabBadge();
+    updateGoogleUI();
+
+    // Intentar inicializar token client en cuanto GIS cargue
+    const gisCheck = setInterval(() => {
+      if (ensureTokenClient()) clearInterval(gisCheck);
+    }, 500);
+    setTimeout(() => clearInterval(gisCheck), 10000); // dejar de reintentar a los 10s
   </script>
 </body>
 </html>

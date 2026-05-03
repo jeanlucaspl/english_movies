@@ -350,28 +350,15 @@
   </header>
 
   <div class="mode-tabs">
-    <button class="mode-tab active" onclick="switchMode('vocab')" id="tab-vocab">Almacén<span class="tab-badge" id="vocab-badge"></span></button>
-    <button class="mode-tab" onclick="switchMode('script')"    id="tab-script">Script</button>
+    <button class="mode-tab active" onclick="switchMode('script')"    id="tab-script">Script</button>
     <button class="mode-tab" onclick="switchMode('shadowing')" id="tab-shadowing">Shadow</button>
     <button class="mode-tab" onclick="switchMode('flashcard')" id="tab-flashcard">Flash</button>
     <button class="mode-tab" onclick="switchMode('quiz')"      id="tab-quiz">Quiz</button>
     <button class="mode-tab" onclick="switchMode('chat')"      id="tab-chat">Chat</button>
   </div>
 
-  <!-- ── ALMACÉN ── -->
-  <div class="view active" id="view-vocab">
-    <div class="vocab-toolbar">
-      <span class="vocab-toolbar-title">Mi Almacén</span>
-      <div class="vocab-toolbar-actions">
-        <button class="btn-sync" id="vocab-sync-btn" style="display:none" onclick="syncVocabToSheets()">↑ Sheets</button>
-        <button class="btn-google" id="google-login-btn" onclick="handleGoogleBtn()">Gmail</button>
-      </div>
-    </div>
-    <div class="vocab-list" id="vocab-list"></div>
-  </div>
-
   <!-- ── SCRIPT ── -->
-  <div class="view" id="view-script">
+  <div class="view active" id="view-script">
     <div class="selection-bar" id="selection-bar" style="display:none">
       <span class="selection-bar-count" id="selection-count">0 seleccionadas</span>
       <button class="selection-bar-clear" onclick="clearSelection()">Limpiar selección</button>
@@ -557,7 +544,6 @@
       document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
       document.getElementById('view-' + mode).classList.add('active');
       document.getElementById('tab-' + mode).classList.add('active');
-      if (mode === 'vocab')     renderVocab();
       if (mode === 'shadowing') renderShadow();
       if (mode === 'flashcard') renderFlash();
       if (mode === 'quiz')      renderQuiz();
