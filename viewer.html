@@ -506,6 +506,7 @@
 
     // Chat history
     let chatHistory = [];
+    let chatInitialized = false;
 
     // AI key
     let geminiKey = localStorage.getItem('gemini_key') || '';
@@ -693,10 +694,11 @@
 
       const fab = document.getElementById('fab-analyze');
       fab.disabled = true;
-      fab.textContent = 'Analizando...';
+      document.getElementById('fab-count').textContent = '...';
 
+      const lineCount = selectedLines.size;
       // Open sheet immediately with loading state
-      document.getElementById('sheet-line').textContent = `Analizando ${selectedLines.size} línea(s)...`;
+      document.getElementById('sheet-line').textContent = `Analizando ${lineCount} línea${lineCount > 1 ? 's' : ''}...`;
       document.getElementById('sheet-body').innerHTML   = `<div class="loading-state"><span class="loading-dots">Consultando Gemini</span></div>`;
       document.getElementById('overlay').classList.add('on');
       document.getElementById('sheet').classList.add('on');
@@ -706,34 +708,28 @@
         const lines   = [...selectedLines].map(id => allLines.find(l => l.id === id)).filter(Boolean);
         const results = await analyzeLines(lines);
 
-        document.getElementById('sheet-line').textContent = `Análisis · ${results.length} línea${results.length > 1 ? 's' : ''}`;
+        document.getElementById('sheet-line').textContent = `Análisis · ${lineCount} línea${lineCount > 1 ? 's' : ''}`;
         document.getElementById('sheet-body').innerHTML   = buildAnalysisSheetHTML(results);
       } catch (err) {
         document.getElementById('sheet-body').innerHTML =
           `<div class="loading-state" style="color:var(--red)">Error: ${esc(err.message)}</div>`;
       }
 
-      fab.disabled    = false;
-      fab.textContent = `Analizar ${selectedLines.size} línea(s)`;
+      fab.disabled = false;
       updateFAB();
     }
 
     async function analyzeLines(lines) {
-      // Use cached JSON data when available; only call Gemini for lines without analysis
-      const withCache   = lines.filter(l => l.translation);
-      const needsGemini = lines.filter(l => !l.translation);
-
-      let results = [...withCache];
-
-      if (needsGemini.length > 0) {
-        const fresh = await callGeminiAnalysis(needsGemini);
-        results = [...results, ...fresh];
+      if (lines.length === 1) {
+        // Single line: use cache if available
+        if (lines[0].translation) return lines;
+        return await callGeminiPerLine(lines);
       }
-
-      return results.sort((a, b) => a.id - b.id);
+      // Multiple lines: unified analysis as a single passage
+      return [await callGeminiUnified(lines)];
     }
 
-    async function callGeminiAnalysis(lines) {
+    async function callGeminiPerLine(lines) {
       const prompt = `Analyze these English movie lines. Return ONLY a valid JSON array — no markdown, no code blocks, no explanation.
 
 For each line return an object with these exact fields:
@@ -750,10 +746,31 @@ Lines:
 ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
 
       const raw = await callGemini(prompt);
-
-      // Extract JSON array from response
       const match = raw.match(/\[[\s\S]*\]/);
-      if (!match) throw new Error('Respuesta de Gemini no parseable. Intentá con menos líneas.');
+      if (!match) throw new Error('Respuesta de Gemini no parseable.');
+      return JSON.parse(match[0]);
+    }
+
+    async function callGeminiUnified(lines) {
+      const passage = lines.map(l => l.line).join(' ');
+      const prompt = `Analyze these English movie lines as a SINGLE unified passage. Return ONLY a valid JSON object — no markdown, no code blocks, no explanation.
+
+Return one object with these exact fields:
+- id: "unified"
+- line: the full passage (all lines joined)
+- phonetic: full IPA transcription of the entire passage in American English
+- translation: single natural Spanish translation of the entire passage
+- tense: overall verb tense and grammatical analysis in Spanish (covering all lines)
+- structure: syntactic analysis of the entire passage in Spanish
+- tokens: array of {"word":"<word>","pos":"<grammatical category in Spanish>","note":"<brief explanation in Spanish>"} — include all significant words across all lines
+- note: contextual or rhetorical note about the entire passage in Spanish
+
+Lines:
+${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
+
+      const raw = await callGemini(prompt);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('Respuesta de Gemini no parseable.');
       return JSON.parse(match[0]);
     }
 
@@ -765,7 +782,7 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
 
       return entries.map(e => `
         <div class="a-card">
-          <div class="a-line-num">Línea ${e.id}</div>
+          <div class="a-line-num">${String(e.id) === 'unified' ? 'Análisis unificado' : 'Línea ' + e.id}</div>
           <div class="a-original">${esc(e.line)}</div>
 
           <div class="a-section">
@@ -1034,7 +1051,8 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
       });
 
-      if (chatHistory.length === 0) {
+      if (!chatInitialized) {
+        chatInitialized = true;
         addChatMessage('ai', 'Hola. Preguntame sobre gramática, vocabulario, pronunciación o cualquier duda de inglés.');
       }
     }
