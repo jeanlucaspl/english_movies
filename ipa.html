@@ -252,30 +252,28 @@
     document.addEventListener('click',      unlockSpeech, { once: true });
 
     function speak(text, onEnd) {
-      if (!window.speechSynthesis) return;
+      // Usar TTS nativo Android si está disponible (más confiable en WebView)
+      if (window.AndroidTTS) {
+        window.AndroidTTS.speak(text);
+        // TTS nativo no tiene callback JS, estimamos duración por longitud de texto
+        if (onEnd) setTimeout(onEnd, Math.max(800, text.length * 60));
+        return;
+      }
 
-      // IMPORTANT: NO setTimeout here — iOS requires speak() to be called
-      // synchronously within the user gesture event handler.
+      // Fallback: Web Speech API (para acceso desde navegador de escritorio)
+      if (!window.speechSynthesis) return;
       if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
         window.speechSynthesis.cancel();
       }
-
-      // Refresh voices (needed on Android where they load async)
       if (voices.length === 0) voices = window.speechSynthesis.getVoices();
-
       const u = new SpeechSynthesisUtterance(text);
       u.lang  = 'en-US';
       u.rate  = 0.82;
       u.pitch = 1;
-
-      const enVoice = voices.find(v => v.lang === 'en-US')
-                   || voices.find(v => v.lang.startsWith('en'));
+      const enVoice = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en'));
       if (enVoice) u.voice = enVoice;
-
       u.onend   = () => { if (onEnd) onEnd(); };
-      u.onerror = ()  => { if (onEnd) onEnd(); };
-
-      // Android WebView: resume if paused
+      u.onerror = () => { if (onEnd) onEnd(); };
       window.speechSynthesis.resume();
       window.speechSynthesis.speak(u);
     }
