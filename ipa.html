@@ -230,39 +230,54 @@
     // SPEECH
     // ═══════════════════════════════════════════
 
-    // Pre-load voices (required on some mobile browsers)
     let voices = [];
+
     function loadVoices() {
       voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
     }
     loadVoices();
-    if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
+    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    // iOS/Android: pre-warm speech synthesis on first user touch
+    // (must be called synchronously from a gesture)
+    let speechUnlocked = false;
+    function unlockSpeech() {
+      if (speechUnlocked || !window.speechSynthesis) return;
+      speechUnlocked = true;
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
     }
+    document.addEventListener('touchstart', unlockSpeech, { once: true, passive: true });
+    document.addEventListener('click',      unlockSpeech, { once: true });
 
-    function speak(text, onEnd, onErr) {
+    function speak(text, onEnd) {
       if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
 
-      // iOS/Android fix: small delay after cancel() before speaking
-      setTimeout(() => {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang  = 'en-US';
-        u.rate  = 0.8;
-        u.pitch = 1;
+      // IMPORTANT: NO setTimeout here — iOS requires speak() to be called
+      // synchronously within the user gesture event handler.
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+        window.speechSynthesis.cancel();
+      }
 
-        // Pick an English voice explicitly (critical on mobile)
-        if (voices.length === 0) voices = window.speechSynthesis.getVoices();
-        const enVoice = voices.find(v => v.lang === 'en-US' && !v.localService === false)
-                     || voices.find(v => v.lang === 'en-US')
-                     || voices.find(v => v.lang.startsWith('en'));
-        if (enVoice) u.voice = enVoice;
+      // Refresh voices (needed on Android where they load async)
+      if (voices.length === 0) voices = window.speechSynthesis.getVoices();
 
-        u.onend   = () => { if (onEnd) onEnd(); };
-        u.onerror = () => { if (onEnd) onEnd(); if (onErr) onErr(); };
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang  = 'en-US';
+      u.rate  = 0.82;
+      u.pitch = 1;
 
-        window.speechSynthesis.speak(u);
-      }, 80);
+      const enVoice = voices.find(v => v.lang === 'en-US')
+                   || voices.find(v => v.lang.startsWith('en'));
+      if (enVoice) u.voice = enVoice;
+
+      u.onend   = () => { if (onEnd) onEnd(); };
+      u.onerror = ()  => { if (onEnd) onEnd(); };
+
+      // Android WebView: resume if paused
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(u);
     }
 
     function playPhoneme(cardEl, speakText) {
