@@ -1202,36 +1202,23 @@ Tutor:`;
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
-        callback: handleGoogleToken
+        ux_mode: 'redirect',
+        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
+        callback: () => {}
       });
-      // Restore saved user info display
       updateGoogleUI();
-    }
-
-    async function handleGoogleToken(resp) {
-      if (resp.error) { showToast('Error de autenticación'); return; }
-      googleToken = resp.access_token;
-      try {
-        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${googleToken}` }
-        });
-        googleUser = await r.json();
-        localStorage.setItem('google_email', googleUser.email);
-        updateGoogleUI();
-        showToast('Conectado como ' + googleUser.email);
-      } catch(e) { showToast('Error al obtener info de usuario'); }
     }
 
     function handleGoogleBtn() {
       if (googleToken) {
-        // Logout
-        googleToken = null;
-        googleUser  = null;
+        googleToken = null; googleUser = null;
         localStorage.removeItem('google_email');
+        sessionStorage.removeItem('google_token');
         updateGoogleUI();
         showToast('Sesión cerrada');
       } else {
         if (tokenClient) {
+          sessionStorage.setItem('auth_return', location.href);
           tokenClient.requestAccessToken();
         } else {
           showToast('Google aún cargando, intentá de nuevo');
@@ -1407,6 +1394,9 @@ Tutor:`;
     // ═══════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════
+    // Restaurar token Google de sesión activa (seteado por index.html tras redirect auth)
+    const _savedToken = sessionStorage.getItem('google_token');
+    if (_savedToken) { googleToken = _savedToken; }
     loadMovie();
     updateVocabBadge();
     updateGoogleUI();

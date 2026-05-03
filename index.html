@@ -388,59 +388,57 @@
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
-        callback: handleGoogleToken
+        ux_mode: 'redirect',
+        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
+        callback: () => {}
       });
       return true;
     }
 
     function handleGoogleBtn() {
       if (googleToken) {
-        // Logout
         googleToken = null; googleUser = null;
         localStorage.removeItem('google_email');
+        sessionStorage.removeItem('google_token');
         updateGoogleUI();
         showToast('Sesión cerrada');
         return;
       }
-
-      // Intentar inicializar si todavía no está listo
       if (ensureTokenClient()) {
         tokenClient.requestAccessToken();
       } else {
-        // GIS aún cargando — reintentar con feedback visual
-        const btn = document.getElementById('google-login-btn');
-        btn.textContent = 'Cargando...';
-        btn.disabled = true;
-        let tries = 0;
-        const interval = setInterval(() => {
-          tries++;
-          if (ensureTokenClient()) {
-            clearInterval(interval);
-            btn.textContent = localStorage.getItem('google_email') || 'Gmail';
-            btn.disabled = false;
-            tokenClient.requestAccessToken();
-          } else if (tries > 40) {
-            clearInterval(interval);
-            btn.textContent = 'Gmail';
-            btn.disabled = false;
-            showToast('Google no disponible — revisá tu conexión');
-          }
-        }, 300);
+        showToast('Google cargando, intentá en un momento');
       }
     }
 
-    async function handleGoogleToken(resp) {
-      if (resp.error) { showToast('Error de autenticación'); return; }
-      googleToken = resp.access_token;
-      try {
-        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${googleToken}` }
-        });
-        googleUser = await r.json();
-        localStorage.setItem('google_email', googleUser.email);
-        updateGoogleUI();
-        showToast('Conectado como ' + googleUser.email);
-      } catch { showToast('Error al obtener datos de usuario'); }
+    async function checkRedirectToken() {
+      const hash = location.hash.substring(1);
+      if (hash) {
+        const params = new URLSearchParams(hash);
+        const token  = params.get('access_token');
+        if (token) {
+          history.replaceState(null, '', location.pathname);
+          sessionStorage.setItem('google_token', token);
+          googleToken = token;
+          try {
+            const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            googleUser = await r.json();
+            localStorage.setItem('google_email', googleUser.email);
+            updateGoogleUI();
+            showToast('Conectado como ' + googleUser.email);
+          } catch { updateGoogleUI(); }
+          // Si el auth fue disparado desde viewer.html, volver ahí
+          const returnTo = sessionStorage.getItem('auth_return');
+          sessionStorage.removeItem('auth_return');
+          if (returnTo) { location.href = returnTo; }
+          return;
+        }
+      }
+      // Restaurar token de sesión activa
+      const saved = sessionStorage.getItem('google_token');
+      if (saved) { googleToken = saved; updateGoogleUI(); }
     }
 
     function updateGoogleUI() {
@@ -660,13 +658,11 @@
     // INIT
     // ══════════════════════════════════════════
     updateVocabBadge();
-    updateGoogleUI();
-
-    // Intentar inicializar token client en cuanto GIS cargue
+    checkRedirectToken();
     const gisCheck = setInterval(() => {
       if (ensureTokenClient()) clearInterval(gisCheck);
     }, 500);
-    setTimeout(() => clearInterval(gisCheck), 10000); // dejar de reintentar a los 10s
+    setTimeout(() => clearInterval(gisCheck), 15000);
   </script>
   <footer style="text-align:center;padding:12px;font-size:12px;color:#555;">
     <a href="privacy.html" style="color:#555;">Privacy Policy</a>
