@@ -60,7 +60,45 @@
       margin-top: 1px;
     }
 
-    /* ── LEGEND ── */
+    /* ── MODE TABS ── */
+    .mode-tabs {
+      display: flex;
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+      position: sticky;
+      top: 57px;
+      z-index: 9;
+    }
+
+    .mode-tab {
+      flex: 1;
+      padding: 11px 4px;
+      background: none;
+      border: none;
+      color: #444;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .mode-tab .tab-icon { font-size: 16px; }
+
+    .mode-tab.active {
+      color: #e8b84b;
+      border-bottom-color: #e8b84b;
+    }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── SCRIPT VIEW ── */
     .legend {
       padding: 10px 16px;
       display: flex;
@@ -81,7 +119,6 @@
     .dot.analyzed { background: #e8b84b; }
     .dot.plain { background: #333; }
 
-    /* ── LINE LIST ── */
     .script { padding: 8px 0 120px; }
 
     .line-row {
@@ -93,13 +130,8 @@
       min-height: 52px;
     }
 
-    .line-row.analyzable {
-      cursor: pointer;
-    }
-
-    .line-row.analyzable:active {
-      background: #1a1a1a;
-    }
+    .line-row.analyzable { cursor: pointer; }
+    .line-row.analyzable:active { background: #1a1a1a; }
 
     .line-num {
       font-size: 11px;
@@ -119,14 +151,9 @@
       color: #c0c0c0;
     }
 
-    .line-row.analyzable .line-text {
-      color: #e0e0e0;
-    }
+    .line-row.analyzable .line-text { color: #e0e0e0; }
 
-    .line-indicator {
-      flex-shrink: 0;
-      padding-top: 5px;
-    }
+    .line-indicator { flex-shrink: 0; padding-top: 5px; }
 
     .analyze-dot {
       width: 6px;
@@ -135,27 +162,340 @@
       background: #e8b84b;
     }
 
+    /* ── PRACTICE VIEWS COMMON ── */
+    .practice-view {
+      padding: 20px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .practice-counter {
+      font-size: 11px;
+      color: #444;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .practice-card {
+      background: #141414;
+      border-radius: 16px;
+      padding: 24px 20px;
+      border: 1px solid #1e1e1e;
+    }
+
+    .btn-next {
+      width: 100%;
+      padding: 16px;
+      background: #e8b84b;
+      color: #0d0d0d;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-next:active { opacity: 0.85; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px;
+      background: #1a1a1a;
+      color: #888;
+      border: 1px solid #222;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary:active { background: #222; }
+
+    /* ── SHADOWING ── */
+    .shadow-line {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f0f0f0;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .shadow-blank {
+      display: inline-block;
+      background: #e8b84b22;
+      border-bottom: 2px solid #e8b84b;
+      min-width: 60px;
+      height: 24px;
+      border-radius: 4px 4px 0 0;
+      margin: 0 2px;
+      vertical-align: middle;
+    }
+
+    .shadow-ipa {
+      font-size: 13px;
+      color: #555;
+      font-style: italic;
+      font-family: 'Segoe UI', Georgia, serif;
+      margin-bottom: 4px;
+    }
+
+    .shadow-hint {
+      font-size: 12px;
+      color: #333;
+    }
+
+    .shadow-reveal {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .shadow-reveal.visible { display: block; }
+
+    .shadow-full-line {
+      font-size: 17px;
+      font-weight: 600;
+      color: #e8b84b;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .shadow-translation {
+      font-size: 15px;
+      color: #aaa;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .shadow-note {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      border-left: 2px solid #333;
+      padding-left: 10px;
+    }
+
+    .revealed-word {
+      color: #e8b84b;
+      font-weight: 700;
+      text-decoration: underline;
+      text-decoration-color: #e8b84b66;
+    }
+
+    /* ── FLASHCARD ── */
+    .flashcard-wrap {
+      perspective: 1000px;
+    }
+
+    .flashcard {
+      position: relative;
+      min-height: 220px;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .flashcard.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: #141414;
+      border-radius: 16px;
+      padding: 28px 20px;
+      border: 1px solid #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card-back { transform: rotateY(180deg); }
+
+    .card-face-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 14px;
+    }
+
+    .card-english {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f0f0f0;
+      line-height: 1.5;
+    }
+
+    .card-tap-hint {
+      font-size: 12px;
+      color: #2e2e2e;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .card-translation {
+      font-size: 19px;
+      font-weight: 600;
+      color: #e8b84b;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .card-ipa {
+      font-size: 13px;
+      color: #666;
+      font-style: italic;
+      font-family: Georgia, serif;
+      margin-bottom: 10px;
+    }
+
+    .card-note {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      border-left: 2px solid #333;
+      padding-left: 10px;
+    }
+
+    .card-spacer { flex: 1; min-height: 16px; }
+
+    /* Static placeholder while animating */
+    .flashcard-static {
+      background: #141414;
+      border-radius: 16px;
+      border: 1px solid #1e1e1e;
+      min-height: 220px;
+    }
+
+    /* ── QUIZ ── */
+    .quiz-line {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f0f0f0;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    .quiz-blank {
+      display: inline-block;
+      background: #e8b84b22;
+      border-bottom: 2px solid #e8b84b;
+      min-width: 80px;
+      padding: 0 8px;
+      border-radius: 4px 4px 0 0;
+      color: transparent;
+      user-select: none;
+    }
+
+    .quiz-blank.revealed {
+      color: #e8b84b;
+      font-weight: 700;
+    }
+
+    .quiz-ipa {
+      font-size: 12px;
+      color: #444;
+      font-style: italic;
+      font-family: Georgia, serif;
+      margin-bottom: 16px;
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .quiz-opt {
+      padding: 16px 12px;
+      background: #1a1a1a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      color: #ccc;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .quiz-opt:active { background: #222; }
+
+    .quiz-opt.correct {
+      background: #1a3a2a;
+      border-color: #4bae8a;
+      color: #4bae8a;
+    }
+
+    .quiz-opt.wrong {
+      background: #3a1a1a;
+      border-color: #ae4b4b;
+      color: #ae4b4b;
+    }
+
+    .quiz-opt.disabled { pointer-events: none; }
+
+    .quiz-feedback {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 10px 0 4px;
+      display: none;
+    }
+
+    .quiz-feedback.visible { display: block; }
+    .quiz-feedback.ok { color: #4bae8a; }
+    .quiz-feedback.fail { color: #ae4b4b; }
+
+    .quiz-reveal {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: none;
+    }
+
+    .quiz-reveal.visible { display: block; }
+
+    .quiz-reveal-translation {
+      font-size: 15px;
+      color: #aaa;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .quiz-reveal-note {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      border-left: 2px solid #333;
+      padding-left: 10px;
+    }
+
     /* ── BOTTOM SHEET ── */
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0,0,0,0.7);
       z-index: 100;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s ease;
     }
 
-    .overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .overlay.visible { opacity: 1; pointer-events: auto; }
 
     .sheet {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       z-index: 101;
       background: #141414;
       border-radius: 20px 20px 0 0;
@@ -167,13 +507,10 @@
       transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     }
 
-    .sheet.visible {
-      transform: translateY(0);
-    }
+    .sheet.visible { transform: translateY(0); }
 
     .sheet-handle {
-      width: 36px;
-      height: 4px;
+      width: 36px; height: 4px;
       background: #333;
       border-radius: 2px;
       margin: 10px auto 0;
@@ -191,14 +528,13 @@
       font-weight: 600;
       color: #f0f0f0;
       line-height: 1.4;
+      padding-right: 36px;
     }
 
     .sheet-close {
       position: absolute;
-      top: 12px;
-      right: 16px;
-      width: 30px;
-      height: 30px;
+      top: 12px; right: 16px;
+      width: 30px; height: 30px;
       border-radius: 50%;
       background: #222;
       border: none;
@@ -218,9 +554,7 @@
     }
 
     /* ── SHEET SECTIONS ── */
-    .section {
-      padding: 16px 20px 0;
-    }
+    .section { padding: 16px 20px 0; }
 
     .section-label {
       font-size: 10px;
@@ -231,7 +565,6 @@
       margin-bottom: 8px;
     }
 
-    /* Translation */
     .translation-box {
       background: #1a1a1a;
       border-radius: 12px;
@@ -246,7 +579,6 @@
       line-height: 1.4;
     }
 
-    /* Phonetic */
     .phonetic-text {
       font-size: 15px;
       color: #888;
@@ -257,7 +589,6 @@
       font-family: 'Segoe UI', Georgia, serif;
     }
 
-    /* Tense + Structure */
     .info-row {
       background: #1a1a1a;
       border-radius: 10px;
@@ -265,24 +596,10 @@
       margin-bottom: 6px;
     }
 
-    .info-row .key {
-      font-size: 11px;
-      color: #555;
-      margin-bottom: 3px;
-    }
+    .info-row .key { font-size: 11px; color: #555; margin-bottom: 3px; }
+    .info-row .val { font-size: 14px; color: #ccc; line-height: 1.4; }
 
-    .info-row .val {
-      font-size: 14px;
-      color: #ccc;
-      line-height: 1.4;
-    }
-
-    /* Token table */
-    .token-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
+    .token-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
     .token-table th {
       text-align: left;
@@ -296,24 +613,17 @@
     }
 
     .token-table td {
-      padding: 10px 10px;
+      padding: 10px;
       border-bottom: 1px solid #1a1a1a;
       vertical-align: top;
       line-height: 1.4;
     }
 
     .token-table tr:last-child td { border-bottom: none; }
-
-    .token-word {
-      color: #e8b84b;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
+    .token-word { color: #e8b84b; font-weight: 600; white-space: nowrap; }
     .token-pos { color: #4bae8a; }
     .token-note { color: #777; }
 
-    /* Note */
     .note-box {
       background: #1a1a1a;
       border-radius: 10px;
@@ -324,14 +634,8 @@
       border-left: 3px solid #333;
     }
 
-    /* divider */
-    .divider {
-      height: 1px;
-      background: #1a1a1a;
-      margin: 16px 20px 0;
-    }
+    .divider { height: 1px; background: #1a1a1a; margin: 16px 20px 0; }
 
-    /* ── EMPTY STATE ── */
     #empty-state {
       display: none;
       flex-direction: column;
@@ -357,21 +661,102 @@
     </div>
   </header>
 
-  <div class="legend">
-    <div class="legend-item">
-      <div class="dot analyzed"></div>
-      <span>Tap to analyze</span>
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('script')" id="tab-script">
+      <span class="tab-icon">📜</span>Script
+    </button>
+    <button class="mode-tab" onclick="switchMode('shadowing')" id="tab-shadowing">
+      <span class="tab-icon">🗣</span>Shadowing
+    </button>
+    <button class="mode-tab" onclick="switchMode('flashcard')" id="tab-flashcard">
+      <span class="tab-icon">🃏</span>Flashcard
+    </button>
+    <button class="mode-tab" onclick="switchMode('quiz')" id="tab-quiz">
+      <span class="tab-icon">❓</span>Quiz
+    </button>
+  </div>
+
+  <!-- SCRIPT VIEW -->
+  <div class="view active" id="view-script">
+    <div class="legend">
+      <div class="legend-item">
+        <div class="dot analyzed"></div>
+        <span>Tap to analyze</span>
+      </div>
+      <div class="legend-item">
+        <div class="dot plain"></div>
+        <span>Not yet analyzed</span>
+      </div>
     </div>
-    <div class="legend-item">
-      <div class="dot plain"></div>
-      <span>Not yet analyzed</span>
+    <div class="script" id="script-container">
+      <div id="empty-state">
+        <div class="emoji">🎬</div>
+        <p>Loading script...</p>
+      </div>
     </div>
   </div>
 
-  <div class="script" id="script-container">
-    <div id="empty-state">
-      <div class="emoji">🎬</div>
-      <p>Loading script...</p>
+  <!-- SHADOWING VIEW -->
+  <div class="view" id="view-shadowing">
+    <div class="practice-view" id="shadowing-content">
+      <div class="practice-counter" id="shadow-counter"></div>
+      <div class="practice-card">
+        <div class="shadow-ipa" id="shadow-ipa"></div>
+        <div class="shadow-line" id="shadow-line"></div>
+        <div class="shadow-hint">Tap "Reveal" to see the missing words</div>
+      </div>
+      <div class="shadow-reveal" id="shadow-reveal">
+        <div class="shadow-full-line" id="shadow-full"></div>
+        <div class="shadow-translation" id="shadow-translation"></div>
+        <div class="shadow-note" id="shadow-note"></div>
+      </div>
+      <button class="btn-secondary" id="shadow-reveal-btn" onclick="revealShadow()">Reveal answer</button>
+      <button class="btn-next" onclick="nextShadow()">Next →</button>
+    </div>
+  </div>
+
+  <!-- FLASHCARD VIEW -->
+  <div class="view" id="view-flashcard">
+    <div class="practice-view">
+      <div class="practice-counter" id="flash-counter"></div>
+      <div class="flashcard-wrap">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="card-face card-front">
+            <div class="card-face-label">English</div>
+            <div class="card-english" id="flash-english"></div>
+            <div class="card-spacer"></div>
+            <div class="card-tap-hint">Tap to reveal translation</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-face-label">Translation</div>
+            <div class="card-translation" id="flash-translation"></div>
+            <div class="card-ipa" id="flash-ipa"></div>
+            <div class="card-note" id="flash-note"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="openSheet(currentFlashEntry)">Full analysis</button>
+      <button class="btn-next" onclick="nextFlash()">Next →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ VIEW -->
+  <div class="view" id="view-quiz">
+    <div class="practice-view">
+      <div class="practice-counter" id="quiz-counter"></div>
+      <div class="practice-card">
+        <div class="quiz-line" id="quiz-line"></div>
+        <div class="quiz-ipa" id="quiz-ipa"></div>
+        <div class="quiz-options" id="quiz-options"></div>
+      </div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <div class="quiz-reveal" id="quiz-reveal">
+        <div class="quiz-reveal-translation" id="quiz-reveal-translation"></div>
+        <div class="quiz-reveal-note" id="quiz-reveal-note"></div>
+      </div>
+      <button class="btn-secondary" id="quiz-analysis-btn" style="display:none" onclick="openSheet(currentQuizEntry)">Full analysis</button>
+      <button class="btn-next" id="quiz-next-btn" style="display:none" onclick="nextQuiz()">Next →</button>
     </div>
   </div>
 
@@ -382,11 +767,9 @@
   <div class="sheet" id="sheet">
     <div class="sheet-handle"></div>
     <button class="sheet-close" onclick="closeSheet()">✕</button>
-
     <div class="sheet-header">
       <div class="sheet-original" id="sheet-original"></div>
     </div>
-
     <div class="sheet-body" id="sheet-body"></div>
   </div>
 
@@ -394,31 +777,84 @@
     const params = new URLSearchParams(location.search);
     const movieId = params.get('movie') || 'patch_adams';
 
-    let currentData = null;
+    let allLines = [];          // todas las líneas
+    let analyzedLines = [];     // solo las analizadas (con translation)
+    let currentMode = 'script';
 
+    // ── Flashcard state ──
+    let flashQueue = [];
+    let flashIndex = 0;
+    let currentFlashEntry = null;
+
+    // ── Quiz state ──
+    let currentQuizEntry = null;
+    let quizCount = 0;
+    let quizCorrect = 0;
+
+    // ── Shadow state ──
+    let shadowQueue = [];
+    let shadowIndex = 0;
+    let currentShadowEntry = null;
+    let shadowHiddenWords = [];
+
+    // ═══════════════════════════════════════════
+    // LOAD
+    // ═══════════════════════════════════════════
     async function loadMovie() {
       try {
         const res = await fetch(`data/${movieId}.json`);
-        currentData = await res.json();
+        const data = await res.json();
 
-        document.getElementById('movie-title').textContent = currentData.movie;
+        document.getElementById('movie-title').textContent = data.movie;
         document.getElementById('movie-subtitle').textContent =
-          `${currentData.year} · ${currentData.lines.length} lines`;
+          `${data.year} · ${data.lines.length} lines`;
 
-        renderScript(currentData.lines);
+        allLines = data.lines;
+        analyzedLines = data.lines.filter(l => l.translation && l.tokens && l.tokens.length >= 2);
+
+        renderScript(allLines);
+        initQueues();
       } catch (e) {
         document.getElementById('empty-state').style.display = 'flex';
         document.querySelector('#empty-state p').textContent = 'Could not load script.';
       }
     }
 
+    function initQueues() {
+      flashQueue  = shuffle([...analyzedLines]);
+      shadowQueue = shuffle([...analyzedLines.filter(l => l.tokens.length >= 3)]);
+      flashIndex  = 0;
+      shadowIndex = 0;
+    }
+
+    // ═══════════════════════════════════════════
+    // MODE SWITCH
+    // ═══════════════════════════════════════════
+    function switchMode(mode) {
+      currentMode = mode;
+
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+
+      document.getElementById('view-' + mode).classList.add('active');
+      document.getElementById('tab-' + mode).classList.add('active');
+
+      if (mode === 'shadowing') renderShadow();
+      if (mode === 'flashcard') renderFlash();
+      if (mode === 'quiz')      renderQuiz();
+
+      window.scrollTo(0, 0);
+    }
+
+    // ═══════════════════════════════════════════
+    // SCRIPT VIEW
+    // ═══════════════════════════════════════════
     function renderScript(lines) {
       const container = document.getElementById('script-container');
       container.innerHTML = '';
 
-      lines.forEach((entry, i) => {
+      lines.forEach(entry => {
         const isAnalyzed = !!entry.translation;
-
         const row = document.createElement('div');
         row.className = 'line-row' + (isAnalyzed ? ' analyzable' : '');
         if (isAnalyzed) row.onclick = () => openSheet(entry);
@@ -430,17 +866,214 @@
           </div>
           ${isAnalyzed ? '<div class="line-indicator"><div class="analyze-dot"></div></div>' : ''}
         `;
-
         container.appendChild(row);
       });
     }
 
+    // ═══════════════════════════════════════════
+    // SHADOWING
+    // ═══════════════════════════════════════════
+    function renderShadow() {
+      if (!shadowQueue.length) return;
+
+      const entry = shadowQueue[shadowIndex % shadowQueue.length];
+      currentShadowEntry = entry;
+
+      // Pick 2-3 random tokens to hide (prefer content words)
+      const contentTokens = entry.tokens.filter(t =>
+        !['artículo', 'preposición', 'conjunción', 'pronombre personal objeto'].some(p => t.pos.includes(p))
+      );
+      const pool = contentTokens.length >= 2 ? contentTokens : entry.tokens;
+      const count = Math.min(pool.length, entry.tokens.length >= 6 ? 3 : 2);
+      shadowHiddenWords = shuffle([...pool]).slice(0, count).map(t => t.word);
+
+      // Build line with blanks
+      let lineHtml = escapeHtml(entry.line);
+      shadowHiddenWords.forEach(word => {
+        const re = new RegExp('\\b' + escapeRegex(word) + '\\b', 'gi');
+        lineHtml = lineHtml.replace(re, `<span class="shadow-blank"></span>`);
+      });
+
+      document.getElementById('shadow-counter').textContent =
+        `${(shadowIndex % shadowQueue.length) + 1} / ${shadowQueue.length}`;
+      document.getElementById('shadow-ipa').textContent = entry.phonetic ? `/ ${entry.phonetic} /` : '';
+      document.getElementById('shadow-line').innerHTML = lineHtml;
+
+      // Hide reveal panel
+      document.getElementById('shadow-reveal').classList.remove('visible');
+      document.getElementById('shadow-reveal-btn').style.display = '';
+    }
+
+    function revealShadow() {
+      const entry = currentShadowEntry;
+
+      // Full line with hidden words highlighted
+      let fullHtml = escapeHtml(entry.line);
+      shadowHiddenWords.forEach(word => {
+        const re = new RegExp('\\b' + escapeRegex(word) + '\\b', 'gi');
+        fullHtml = fullHtml.replace(re, `<span class="revealed-word">${escapeHtml(word)}</span>`);
+      });
+
+      document.getElementById('shadow-full').innerHTML = fullHtml;
+      document.getElementById('shadow-translation').textContent = entry.translation;
+      document.getElementById('shadow-note').textContent = entry.note || '';
+
+      document.getElementById('shadow-reveal').classList.add('visible');
+      document.getElementById('shadow-reveal-btn').style.display = 'none';
+    }
+
+    function nextShadow() {
+      shadowIndex++;
+      if (shadowIndex >= shadowQueue.length) {
+        shadowQueue = shuffle([...shadowQueue]);
+        shadowIndex = 0;
+      }
+      renderShadow();
+    }
+
+    // ═══════════════════════════════════════════
+    // FLASHCARD
+    // ═══════════════════════════════════════════
+    function renderFlash() {
+      if (!flashQueue.length) return;
+
+      const entry = flashQueue[flashIndex % flashQueue.length];
+      currentFlashEntry = entry;
+
+      document.getElementById('flash-counter').textContent =
+        `${(flashIndex % flashQueue.length) + 1} / ${flashQueue.length}`;
+      document.getElementById('flash-english').textContent = entry.line;
+      document.getElementById('flash-translation').textContent = entry.translation;
+      document.getElementById('flash-ipa').textContent = entry.phonetic ? `/ ${entry.phonetic} /` : '';
+      document.getElementById('flash-note').textContent = entry.note || '';
+
+      // Reset flip
+      document.getElementById('flashcard').classList.remove('flipped');
+    }
+
+    function flipCard() {
+      document.getElementById('flashcard').classList.toggle('flipped');
+    }
+
+    function nextFlash() {
+      flashIndex++;
+      if (flashIndex >= flashQueue.length) {
+        flashQueue = shuffle([...flashQueue]);
+        flashIndex = 0;
+      }
+      renderFlash();
+    }
+
+    // ═══════════════════════════════════════════
+    // QUIZ
+    // ═══════════════════════════════════════════
+    function renderQuiz() {
+      if (analyzedLines.length < 4) return;
+
+      // Pick random analyzed line with enough tokens
+      const pool = analyzedLines.filter(l => l.tokens.length >= 2);
+      const entry = pool[Math.floor(Math.random() * pool.length)];
+      currentQuizEntry = entry;
+
+      // Pick the answer token (prefer content words)
+      const contentToks = entry.tokens.filter(t =>
+        !['artículo', 'preposición', 'conjunción'].some(p => t.pos.includes(p))
+      );
+      const answerTok = (contentToks.length ? contentToks : entry.tokens)[
+        Math.floor(Math.random() * (contentToks.length || entry.tokens.length))
+      ];
+      const answer = answerTok.word;
+
+      // 3 wrong options from other lines
+      const otherWords = [];
+      const shuffled = shuffle([...analyzedLines]).filter(l => l.id !== entry.id);
+      for (const l of shuffled) {
+        for (const t of l.tokens) {
+          if (t.word.toLowerCase() !== answer.toLowerCase() && t.word.length > 2) {
+            otherWords.push(t.word);
+            if (otherWords.length === 3) break;
+          }
+        }
+        if (otherWords.length === 3) break;
+      }
+
+      const options = shuffle([answer, ...otherWords]);
+
+      // Build line with blank
+      let lineHtml = escapeHtml(entry.line);
+      const re = new RegExp('\\b' + escapeRegex(answer) + '\\b', 'i');
+      lineHtml = lineHtml.replace(re,
+        `<span class="quiz-blank" id="quiz-blank-span">${escapeHtml(answer)}</span>`
+      );
+
+      quizCount++;
+      document.getElementById('quiz-counter').textContent = `Question ${quizCount}  ·  ✓ ${quizCorrect}`;
+      document.getElementById('quiz-line').innerHTML = lineHtml;
+      document.getElementById('quiz-ipa').textContent = entry.phonetic ? `/ ${entry.phonetic} /` : '';
+
+      // Options
+      const optsEl = document.getElementById('quiz-options');
+      optsEl.innerHTML = options.map(opt => `
+        <button class="quiz-opt" onclick="selectQuizAnswer(this, '${escapeAttr(opt)}', '${escapeAttr(answer)}')">
+          ${escapeHtml(opt)}
+        </button>
+      `).join('');
+
+      // Reset feedback
+      const fb = document.getElementById('quiz-feedback');
+      fb.classList.remove('visible', 'ok', 'fail');
+      fb.textContent = '';
+
+      const rev = document.getElementById('quiz-reveal');
+      rev.classList.remove('visible');
+
+      document.getElementById('quiz-analysis-btn').style.display = 'none';
+      document.getElementById('quiz-next-btn').style.display = 'none';
+    }
+
+    function selectQuizAnswer(btn, chosen, answer) {
+      // Disable all options
+      document.querySelectorAll('.quiz-opt').forEach(b => b.classList.add('disabled'));
+
+      // Reveal blank
+      const blank = document.getElementById('quiz-blank-span');
+      if (blank) blank.classList.add('revealed');
+
+      const correct = chosen.toLowerCase() === answer.toLowerCase();
+
+      if (correct) {
+        btn.classList.add('correct');
+        quizCorrect++;
+      } else {
+        btn.classList.add('wrong');
+        // Highlight correct one
+        document.querySelectorAll('.quiz-opt').forEach(b => {
+          if (b.textContent.trim().toLowerCase() === answer.toLowerCase()) {
+            b.classList.add('correct');
+          }
+        });
+      }
+
+      const fb = document.getElementById('quiz-feedback');
+      fb.textContent = correct ? 'Correct! 🎉' : `The answer was "${answer}"`;
+      fb.className = 'quiz-feedback visible ' + (correct ? 'ok' : 'fail');
+
+      document.getElementById('quiz-reveal').classList.add('visible');
+      document.getElementById('quiz-reveal-translation').textContent = currentQuizEntry.translation;
+      document.getElementById('quiz-reveal-note').textContent = currentQuizEntry.note || '';
+
+      document.getElementById('quiz-analysis-btn').style.display = '';
+      document.getElementById('quiz-next-btn').style.display = '';
+    }
+
+    function nextQuiz() { renderQuiz(); }
+
+    // ═══════════════════════════════════════════
+    // BOTTOM SHEET
+    // ═══════════════════════════════════════════
     function openSheet(entry) {
       document.getElementById('sheet-original').textContent = entry.line;
-
-      const body = document.getElementById('sheet-body');
-      body.innerHTML = buildSheetContent(entry);
-
+      document.getElementById('sheet-body').innerHTML = buildSheetContent(entry);
       document.getElementById('overlay').classList.add('visible');
       document.getElementById('sheet').classList.add('visible');
       document.body.style.overflow = 'hidden';
@@ -455,7 +1088,6 @@
     function buildSheetContent(entry) {
       let html = '';
 
-      // Translation
       html += `
         <div class="section">
           <div class="section-label">Translation</div>
@@ -464,7 +1096,6 @@
           </div>
         </div>`;
 
-      // Phonetic
       if (entry.phonetic) {
         html += `
           <div class="section" style="margin-top:14px">
@@ -473,42 +1104,22 @@
           </div>`;
       }
 
-      // Tense + Structure
       if (entry.tense || entry.structure) {
-        html += `<div class="section" style="margin-top:14px">
-          <div class="section-label">Grammar</div>`;
-
-        if (entry.tense) {
-          html += `<div class="info-row">
-            <div class="key">Verb tense</div>
-            <div class="val">${escapeHtml(entry.tense)}</div>
-          </div>`;
-        }
-
-        if (entry.structure) {
-          html += `<div class="info-row">
-            <div class="key">Sentence structure</div>
-            <div class="val">${escapeHtml(entry.structure)}</div>
-          </div>`;
-        }
-
+        html += `<div class="section" style="margin-top:14px"><div class="section-label">Grammar</div>`;
+        if (entry.tense)
+          html += `<div class="info-row"><div class="key">Verb tense</div><div class="val">${escapeHtml(entry.tense)}</div></div>`;
+        if (entry.structure)
+          html += `<div class="info-row"><div class="key">Sentence structure</div><div class="val">${escapeHtml(entry.structure)}</div></div>`;
         html += `</div>`;
       }
 
-      // Token table
       if (entry.tokens && entry.tokens.length > 0) {
         html += `
           <div class="divider"></div>
           <div class="section" style="margin-top:14px">
             <div class="section-label">Word by word</div>
             <table class="token-table">
-              <thead>
-                <tr>
-                  <th>Word</th>
-                  <th>Category</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Word</th><th>Category</th><th>Note</th></tr></thead>
               <tbody>
                 ${entry.tokens.map(t => `
                   <tr>
@@ -521,7 +1132,6 @@
           </div>`;
       }
 
-      // Note
       if (entry.note) {
         html += `
           <div class="divider"></div>
@@ -534,6 +1144,17 @@
       return html;
     }
 
+    // ═══════════════════════════════════════════
+    // UTILS
+    // ═══════════════════════════════════════════
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return str
@@ -541,6 +1162,15 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     // Swipe down to close sheet
