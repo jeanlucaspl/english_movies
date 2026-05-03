@@ -846,16 +846,16 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
             </div>
           ` : ''}
 
-          ${e.tokens && e.tokens.length ? `
-            <div class="a-section">
-              <div class="a-label">Tocá una palabra para guardarla</div>
-              <div class="a-word-chips">
-                ${e.tokens.map((t, i) => `
-                  <button class="a-chip" id="chip-${e.id}-${i}" onclick="saveTokenToVocab('${e.id}',${i})">${esc(t.word)}</button>
-                `).join('')}
-              </div>
+          <div class="a-section">
+            <div class="a-label">Tocá una palabra para guardarla</div>
+            <div class="a-word-chips">
+              ${e.line.split(/\s+/).map((raw, i) => {
+                const word = raw.replace(/^[^a-zA-Z']+|[^a-zA-Z']+$/g, '');
+                if (!word) return '';
+                return `<button class="a-chip" id="wchip-${e.id}-${i}" onclick="saveWord('${escAttr(word)}','${e.id}','wchip-${e.id}-${i}')">${esc(word)}</button>`;
+              }).join('')}
             </div>
-          ` : ''}
+          </div>
 
           ${e.note ? `
             <div class="a-section">
@@ -870,6 +870,31 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
     // ═══════════════════════════════════════════
     // SAVE TO VOCAB
     // ═══════════════════════════════════════════
+    function saveWord(word, entryId, chipId) {
+      const entry = analysisCache[entryId];
+      const item = {
+        id: Date.now() + Math.random(),
+        text: word,
+        meaning: '',
+        pos: '',
+        phonetic: '',
+        example: entry ? entry.line : '',
+        exampleTranslation: entry ? (entry.translation || '') : '',
+        note: '',
+        movie: movieTitle,
+        lineId: entry ? entry.id : '',
+        savedAt: new Date().toISOString()
+      };
+      const ok = addVocabItem(item);
+      if (ok) {
+        const btn = document.getElementById(chipId);
+        if (btn) btn.classList.add('saved');
+        showToast(`"${word}" guardado`);
+      } else {
+        showToast(`"${word}" ya está en el almacén`);
+      }
+    }
+
     function saveTokenToVocab(entryId, tokenIdx) {
       const entry = analysisCache[entryId];
       if (!entry) return;
