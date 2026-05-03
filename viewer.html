@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Script Viewer</title>
   <link rel="manifest" href="manifest.json">
-  <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -1194,21 +1193,6 @@ Tutor:`;
     // ═══════════════════════════════════════════
     // GOOGLE AUTH
     // ═══════════════════════════════════════════
-    function initGoogleAuth() {
-      if (typeof google === 'undefined' || !google.accounts) {
-        setTimeout(initGoogleAuth, 300);
-        return;
-      }
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        ux_mode: 'redirect',
-        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
-        callback: () => {}
-      });
-      updateGoogleUI();
-    }
-
     function handleGoogleBtn() {
       if (googleToken) {
         googleToken = null; googleUser = null;
@@ -1217,12 +1201,15 @@ Tutor:`;
         updateGoogleUI();
         showToast('Sesión cerrada');
       } else {
-        if (tokenClient) {
-          sessionStorage.setItem('auth_return', location.href);
-          tokenClient.requestAccessToken();
-        } else {
-          showToast('Google aún cargando, intentá de nuevo');
-        }
+        sessionStorage.setItem('auth_return', location.href);
+        const params = new URLSearchParams({
+          client_id: GOOGLE_CLIENT_ID,
+          redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
+          response_type: 'token',
+          scope: GOOGLE_SCOPES,
+          include_granted_scopes: 'true'
+        });
+        location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
       }
     }
 

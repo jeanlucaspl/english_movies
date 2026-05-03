@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>English Movies</title>
   <link rel="manifest" href="manifest.json">
-  <script src="https://accounts.google.com/gsi/client" async defer onload="ensureTokenClient()"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -378,22 +377,8 @@
     // ══════════════════════════════════════════
     // GOOGLE AUTH — inicialización lazy
     // ══════════════════════════════════════════
-    let tokenClient = null;
     let googleToken = null;
     let googleUser  = null;
-
-    function ensureTokenClient() {
-      if (tokenClient) return true;
-      if (typeof google === 'undefined' || !google.accounts?.oauth2) return false;
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        ux_mode: 'redirect',
-        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
-        callback: () => {}
-      });
-      return true;
-    }
 
     function handleGoogleBtn() {
       if (googleToken) {
@@ -404,11 +389,14 @@
         showToast('Sesión cerrada');
         return;
       }
-      if (ensureTokenClient()) {
-        tokenClient.requestAccessToken();
-      } else {
-        showToast('Google cargando, intentá en un momento');
-      }
+      const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
+        response_type: 'token',
+        scope: GOOGLE_SCOPES,
+        include_granted_scopes: 'true'
+      });
+      location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
     }
 
     async function checkRedirectToken() {
@@ -659,10 +647,6 @@
     // ══════════════════════════════════════════
     updateVocabBadge();
     checkRedirectToken();
-    const gisCheck = setInterval(() => {
-      if (ensureTokenClient()) clearInterval(gisCheck);
-    }, 500);
-    setTimeout(() => clearInterval(gisCheck), 15000);
   </script>
   <footer style="text-align:center;padding:12px;font-size:12px;color:#555;">
     <a href="privacy.html" style="color:#555;">Privacy Policy</a>
