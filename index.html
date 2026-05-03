@@ -380,7 +380,19 @@
     let googleToken = null;
     let googleUser  = null;
 
-    function handleGoogleBtn() {
+    // ── PKCE helpers ──
+    function pkceVerifier() {
+      const arr = new Uint8Array(32);
+      crypto.getRandomValues(arr);
+      return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    }
+    async function pkceChallenge(verifier) {
+      const data = new TextEncoder().encode(verifier);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    }
+
+    async function handleGoogleBtn() {
       if (googleToken) {
         googleToken = null; googleUser = null;
         localStorage.removeItem('google_email');
@@ -389,40 +401,57 @@
         showToast('Sesión cerrada');
         return;
       }
+      const verifier   = pkceVerifier();
+      const challenge  = await pkceChallenge(verifier);
+      sessionStorage.setItem('pkce_verifier', verifier);
       const params = new URLSearchParams({
-        client_id: GOOGLE_CLIENT_ID,
-        redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
-        response_type: 'token',
-        scope: GOOGLE_SCOPES,
-        include_granted_scopes: 'true'
+        client_id:             GOOGLE_CLIENT_ID,
+        redirect_uri:          'https://jeanlucaspl.github.io/english_movies/',
+        response_type:         'code',
+        scope:                 GOOGLE_SCOPES,
+        code_challenge:        challenge,
+        code_challenge_method: 'S256',
+        access_type:           'online'
       });
       location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
     }
 
     async function checkRedirectToken() {
-      const hash = location.hash.substring(1);
-      if (hash) {
-        const params = new URLSearchParams(hash);
-        const token  = params.get('access_token');
-        if (token) {
-          history.replaceState(null, '', location.pathname);
-          sessionStorage.setItem('google_token', token);
-          googleToken = token;
-          try {
-            const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            googleUser = await r.json();
-            localStorage.setItem('google_email', googleUser.email);
-            updateGoogleUI();
-            showToast('Conectado como ' + googleUser.email);
-          } catch { updateGoogleUI(); }
-          // Si el auth fue disparado desde viewer.html, volver ahí
-          const returnTo = sessionStorage.getItem('auth_return');
-          sessionStorage.removeItem('auth_return');
-          if (returnTo) { location.href = returnTo; }
-          return;
-        }
+      // PKCE: código de autorización en query params
+      const urlParams = new URLSearchParams(location.search);
+      const code = urlParams.get('code');
+      if (code) {
+        history.replaceState(null, '', location.pathname);
+        const verifier = sessionStorage.getItem('pkce_verifier') || '';
+        sessionStorage.removeItem('pkce_verifier');
+        try {
+          const resp = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code,
+              client_id:    GOOGLE_CLIENT_ID,
+              redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
+              grant_type:   'authorization_code',
+              code_verifier: verifier
+            })
+          });
+          const data = await resp.json();
+          if (data.error) { showToast('Error: ' + data.error_description); return; }
+          googleToken = data.access_token;
+          sessionStorage.setItem('google_token', googleToken);
+          const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${googleToken}` }
+          });
+          googleUser = await r.json();
+          localStorage.setItem('google_email', googleUser.email);
+          updateGoogleUI();
+          showToast('Conectado como ' + googleUser.email);
+        } catch(e) { showToast('Error de autenticación'); }
+        const returnTo = sessionStorage.getItem('auth_return');
+        sessionStorage.removeItem('auth_return');
+        if (returnTo) { location.href = returnTo; }
+        return;
       }
       // Restaurar token de sesión activa
       const saved = sessionStorage.getItem('google_token');

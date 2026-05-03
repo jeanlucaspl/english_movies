@@ -1193,7 +1193,7 @@ Tutor:`;
     // ═══════════════════════════════════════════
     // GOOGLE AUTH
     // ═══════════════════════════════════════════
-    function handleGoogleBtn() {
+    async function handleGoogleBtn() {
       if (googleToken) {
         googleToken = null; googleUser = null;
         localStorage.removeItem('google_email');
@@ -1201,13 +1201,22 @@ Tutor:`;
         updateGoogleUI();
         showToast('Sesión cerrada');
       } else {
+        const arr = new Uint8Array(32);
+        crypto.getRandomValues(arr);
+        const verifier  = btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        const data      = new TextEncoder().encode(verifier);
+        const hash      = await crypto.subtle.digest('SHA-256', data);
+        const challenge = btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        sessionStorage.setItem('pkce_verifier', verifier);
         sessionStorage.setItem('auth_return', location.href);
         const params = new URLSearchParams({
-          client_id: GOOGLE_CLIENT_ID,
-          redirect_uri: 'https://jeanlucaspl.github.io/english_movies/',
-          response_type: 'token',
-          scope: GOOGLE_SCOPES,
-          include_granted_scopes: 'true'
+          client_id:             GOOGLE_CLIENT_ID,
+          redirect_uri:          'https://jeanlucaspl.github.io/english_movies/',
+          response_type:         'code',
+          scope:                 GOOGLE_SCOPES,
+          code_challenge:        challenge,
+          code_challenge_method: 'S256',
+          access_type:           'online'
         });
         location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
       }
