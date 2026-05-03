@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>English Movies</title>
   <link rel="manifest" href="manifest.json">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="ensureTokenClient()"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -419,11 +419,11 @@
             btn.textContent = localStorage.getItem('google_email') || 'Gmail';
             btn.disabled = false;
             tokenClient.requestAccessToken();
-          } else if (tries > 15) {
+          } else if (tries > 40) {
             clearInterval(interval);
             btn.textContent = 'Gmail';
             btn.disabled = false;
-            showToast('Sin conexión — Google no disponible');
+            showToast('Google no disponible — revisá tu conexión');
           }
         }, 300);
       }

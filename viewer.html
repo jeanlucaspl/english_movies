@@ -745,12 +745,28 @@
 
     async function analyzeLines(lines) {
       if (lines.length === 1) {
-        // Single line: use cache if available
         if (lines[0].translation) return lines;
         return await callGeminiPerLine(lines);
       }
-      // Multiple lines: unified analysis as a single passage
+      // Multiple lines: if all have cached data, build unified locally (no Gemini call)
+      if (lines.every(l => l.translation && l.tokens && l.tokens.length)) {
+        return [buildUnifiedFromCache(lines)];
+      }
+      // Some lines lack analysis: call Gemini
       return [await callGeminiUnified(lines)];
+    }
+
+    function buildUnifiedFromCache(lines) {
+      return {
+        id: 'unified',
+        line: lines.map(l => l.line).join(' '),
+        phonetic: lines.map(l => l.phonetic).filter(Boolean).join(' / '),
+        translation: lines.map(l => l.translation).join(' / '),
+        tense: lines.map(l => l.tense).filter(Boolean).join(' · '),
+        structure: lines.map(l => l.structure).filter(Boolean).join(' · '),
+        tokens: lines.flatMap(l => l.tokens || []),
+        note: lines.map(l => l.note).filter(Boolean).join(' ')
+      };
     }
 
     async function callGeminiPerLine(lines) {
@@ -812,7 +828,7 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
           <div class="a-section">
             <div class="a-label">Traducción</div>
             <div class="a-trans">${esc(e.translation || '—')}</div>
-            <button class="a-save-line" id="sl-${e.id}" onclick="saveLineToVocab(${e.id})">+ Guardar línea completa</button>
+            <button class="a-save-line" id="sl-${e.id}" onclick="saveLineToVocab('${e.id}')">+ Guardar línea completa</button>
           </div>
 
           ${e.phonetic ? `
@@ -835,7 +851,7 @@ ${lines.map(l => `[${l.id}] ${l.line}`).join('\n')}`;
               <div class="a-label">Tocá una palabra para guardarla</div>
               <div class="a-word-chips">
                 ${e.tokens.map((t, i) => `
-                  <button class="a-chip" id="chip-${e.id}-${i}" onclick="saveTokenToVocab(${e.id},${i})">${esc(t.word)}</button>
+                  <button class="a-chip" id="chip-${e.id}-${i}" onclick="saveTokenToVocab('${e.id}',${i})">${esc(t.word)}</button>
                 `).join('')}
               </div>
             </div>
