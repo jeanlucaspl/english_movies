@@ -818,6 +818,7 @@
     <button class="mode-tab"        onclick="switchMode('shadowing')" id="tab-shadowing">Shadowing</button>
     <button class="mode-tab"        onclick="switchMode('flashcard')" id="tab-flashcard">Flashcard</button>
     <button class="mode-tab"        onclick="switchMode('quiz')"      id="tab-quiz">Quiz</button>
+    <button class="mode-tab"        onclick="switchMode('aichat')"    id="tab-aichat">AI Chat</button>
   </div>
 
   <!-- ── SCRIPT ── -->
@@ -887,6 +888,30 @@
       <div class="ai-section" id="ai-quiz"></div>
       <button class="btn btn-ghost" id="qz-analysis" style="display:none" onclick="openSheet(currentQuizEntry)">Full analysis</button>
       <button class="btn btn-primary" id="qz-next" style="display:none" onclick="nextQuiz()">Next</button>
+    </div>
+  </div>
+
+  <!-- ── AI CHAT ── -->
+  <div class="view" id="view-aichat">
+    <div class="pview">
+      <div class="p-counter">AI Tutor — ask anything about English</div>
+
+      <div class="p-card" id="aichat-card">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="aichat-ctx-label">No line selected — go to Script and tap a line first, or ask a general question.</div>
+        <div class="ai-row">
+          <textarea class="ai-input" id="aichat-input" placeholder="e.g. What is the difference between 'since' and 'for'?" rows="2"></textarea>
+          <button class="ai-send" id="aichat-send" onclick="sendAIChat()">Ask</button>
+        </div>
+        <div class="ai-response" id="aichat-resp" style="margin-top:10px"></div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Gemini — free web chat</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Open the full Gemini interface to chat for free without API costs. Use the back button to return to the app.</div>
+        </div>
+        <button class="btn btn-ghost" style="border-radius:0;border:none;border-top:1px solid var(--border)" onclick="openGeminiWeb()">Open Gemini</button>
+      </div>
     </div>
   </div>
 
@@ -986,6 +1011,7 @@
       if (mode === 'shadowing') renderShadow();
       if (mode === 'flashcard') renderFlash();
       if (mode === 'quiz')      renderQuiz();
+      if (mode === 'aichat')    initAIChat();
       window.scrollTo(0, 0);
     }
 
@@ -1290,6 +1316,69 @@ Answer in 2-4 sentences. If the student writes in Spanish, answer in Spanish. Be
     }
 
     // ═══════════════════════════════════════════
+    // AI CHAT TAB
+    // ═══════════════════════════════════════════
+    let lastViewedEntry = null; // updated when user opens sheet from script
+
+    function initAIChat() {
+      const ta   = document.getElementById('aichat-input');
+      const send = document.getElementById('aichat-send');
+      const ctx  = document.getElementById('aichat-ctx-label');
+
+      if (!isAIConfigured()) {
+        send.disabled = true;
+        ctx.innerHTML = 'AI not configured. Tap the <b style="color:var(--accent)">&#9881;</b> settings button above.';
+        ctx.style.color = 'var(--red)';
+      } else {
+        send.disabled = false;
+        ctx.style.color = 'var(--muted)';
+        if (lastViewedEntry) {
+          ctx.textContent = `Context: "${lastViewedEntry.line}"`;
+        } else {
+          ctx.textContent = 'Ask any question about English grammar or vocabulary.';
+        }
+      }
+
+      ta.addEventListener('input', () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+      });
+    }
+
+    async function sendAIChat() {
+      const ta   = document.getElementById('aichat-input');
+      const resp = document.getElementById('aichat-resp');
+      const send = document.getElementById('aichat-send');
+      const q    = ta.value.trim();
+      if (!q) return;
+
+      send.disabled    = true;
+      send.textContent = '...';
+      resp.textContent = '';
+      resp.classList.add('on');
+
+      let ctx = 'You are a concise English language tutor. Answer in 2-4 sentences. If the student writes in Spanish, answer in Spanish.\n\n';
+      if (lastViewedEntry) {
+        ctx += `The student is studying this movie line:\nLine: "${lastViewedEntry.line}"\nTranslation: "${lastViewedEntry.translation || ''}"\n${lastViewedEntry.tense ? 'Tense: ' + lastViewedEntry.tense + '\n' : ''}${lastViewedEntry.note ? 'Note: ' + lastViewedEntry.note + '\n' : ''}\n`;
+      }
+      ctx += `Student question: ${q}`;
+
+      try {
+        const answer = aiProvider === 'ollama' ? await callOllama(ctx) : await callGemini(ctx);
+        resp.textContent = answer;
+      } catch (err) {
+        resp.textContent = 'Error: ' + err.message;
+      }
+
+      send.disabled    = false;
+      send.textContent = 'Ask';
+    }
+
+    function openGeminiWeb() {
+      window.location.href = 'https://gemini.google.com';
+    }
+
+    // ═══════════════════════════════════════════
     // SETTINGS
     // ═══════════════════════════════════════════
     function openSettings() {
@@ -1329,6 +1418,7 @@ Answer in 2-4 sentences. If the student writes in Spanish, answer in Spanish. Be
     // BOTTOM SHEET
     // ═══════════════════════════════════════════
     function openSheet(entry) {
+      lastViewedEntry = entry;
       document.getElementById('sheet-line').textContent = entry.line;
       document.getElementById('sheet-body').innerHTML   = buildSheet(entry);
       document.getElementById('overlay').classList.add('on');
