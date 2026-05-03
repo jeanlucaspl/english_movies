@@ -1328,7 +1328,10 @@ Tutor:`;
     let ty0 = 0;
     const sheet = document.getElementById('sheet');
     sheet.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
-    sheet.addEventListener('touchend',   e => { if (e.changedTouches[0].clientY - ty0 > 80) closeSheet(); }, { passive: true });
+    sheet.addEventListener('touchend', e => {
+      const body = document.getElementById('sheet-body');
+      if (e.changedTouches[0].clientY - ty0 > 80 && body.scrollTop === 0) closeSheet();
+    }, { passive: true });
 
     // ═══════════════════════════════════════════
     // TOAST
