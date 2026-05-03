@@ -725,16 +725,22 @@
 
         const headerText = `Análisis · ${lineCount} línea${lineCount > 1 ? 's' : ''}`;
         const html       = buildAnalysisSheetHTML(results);
-        document.getElementById('sheet-line').textContent = headerText;
-        document.getElementById('sheet-body').innerHTML   = html;
+        // Cache result regardless of whether sheet is still open
         lastAnalysis = { key: selectionKey, headerText, html };
+        // Only update sheet if still visible
+        if (document.getElementById('sheet').classList.contains('on')) {
+          document.getElementById('sheet-line').textContent = headerText;
+          document.getElementById('sheet-body').innerHTML   = html;
+        }
       } catch (err) {
-        document.getElementById('sheet-body').innerHTML =
-          `<div class="loading-state" style="color:var(--red)">Error: ${esc(err.message)}</div>`;
+        if (document.getElementById('sheet').classList.contains('on')) {
+          document.getElementById('sheet-body').innerHTML =
+            `<div class="loading-state" style="color:var(--red)">Error: ${esc(err.message)}</div>`;
+        }
+      } finally {
+        fab.disabled = false;
+        updateFAB();
       }
-
-      fab.disabled = false;
-      updateFAB();
     }
 
     async function analyzeLines(lines) {
@@ -1313,6 +1319,9 @@ Tutor:`;
       document.getElementById('overlay').classList.remove('on');
       document.getElementById('sheet').classList.remove('on');
       document.body.style.overflow = '';
+      // Re-enable FAB immediately if a Gemini call is still running in background
+      const fab = document.getElementById('fab-analyze');
+      if (fab && fab.disabled) { fab.disabled = false; updateFAB(); }
     }
 
     // Swipe to close
