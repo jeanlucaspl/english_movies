@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>IPA — Fonética del Inglés</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:      #0a0a0a;
+      --surface: #141414;
+      --border:  #1e1e1e;
+      --border2: #252525;
+      --text:    #e8e8e8;
+      --muted:   #555;
+      --faint:   #1a1a1a;
+      --accent:  #e8b84b;
+      --green:   #4bae8a;
+      --blue:    #4a9eba;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overscroll-behavior: none;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px; height: 56px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-btn { color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 500; }
+
+    .page-title { flex: 1; font-size: 15px; font-weight: 700; }
+
+    .intro {
+      padding: 20px 16px 8px;
+      font-size: 13px; color: #666; line-height: 1.7;
+    }
+    .intro strong { color: #888; }
+
+    .section-label {
+      padding: 20px 16px 10px;
+      font-size: 11px; font-weight: 700; color: #333;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .section-label:first-of-type { border-top: none; }
+
+    .phoneme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      padding: 0 12px 8px;
+    }
+
+    .phoneme-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      display: flex; flex-direction: column; gap: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .phoneme-card:active { background: #1c1c1c; }
+    .phoneme-card.playing { border-color: var(--accent); background: #1a1400; }
+
+    .ph-top { display: flex; align-items: center; justify-content: space-between; }
+
+    .ph-symbol {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 26px; font-weight: 400;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .ph-symbol.consonant { color: var(--blue); }
+
+    .ph-play {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--faint);
+      border: 1px solid var(--border2);
+      color: #555; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    .phoneme-card.playing .ph-play { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+
+    .ph-word {
+      font-size: 14px; font-weight: 600;
+      color: var(--text); line-height: 1.2;
+    }
+    .ph-word mark {
+      background: none;
+      color: var(--accent);
+      font-weight: 800;
+      text-decoration: underline;
+      text-decoration-color: rgba(232,184,75,0.4);
+    }
+    .ph-word.consonant mark { color: var(--blue); text-decoration-color: rgba(74,158,186,0.4); }
+
+    .ph-translation {
+      font-size: 11px; color: var(--muted); line-height: 1.3;
+    }
+
+    .ph-examples {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;
+    }
+    .ph-ex {
+      font-size: 11px;
+      background: var(--faint);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 3px 7px;
+      color: #666; cursor: pointer;
+      transition: color 0.1s, border-color 0.1s;
+    }
+    .ph-ex:active { color: var(--accent); border-color: #3a3010; }
+
+    .tip {
+      margin: 12px 16px 0;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 12px; color: #555; line-height: 1.6;
+    }
+    .tip strong { color: #777; display: block; margin-bottom: 4px; }
+
+    .bottom-space { height: 40px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="back-btn">‹ Back</a>
+    <span class="page-title">Fonética IPA — Inglés</span>
+  </header>
+
+  <div class="intro">
+    El <strong>Alfabeto Fonético Internacional (IPA)</strong> representa exactamente cómo se pronuncia cada sonido. Tocá cualquier símbolo para escucharlo, o tocá las palabras de ejemplo para escucharlas completas.
+  </div>
+
+  <div class="tip">
+    <strong>Cómo usar esta guía</strong>
+    Tocá el círculo ▶ para escuchar el fonema aislado. Tocá las palabras en gris para escuchar el ejemplo completo. El sonido resaltado muestra dónde aparece el fonema.
+  </div>
+
+  <!-- VOWELS -->
+  <div class="section-label">Vocales puras</div>
+  <div class="phoneme-grid" id="grid-vowels"></div>
+
+  <div class="section-label">Diptongos</div>
+  <div class="phoneme-grid" id="grid-diphthongs"></div>
+
+  <!-- CONSONANTS -->
+  <div class="section-label">Consonantes</div>
+  <div class="phoneme-grid" id="grid-consonants"></div>
+
+  <div class="bottom-space"></div>
+
+  <script>
+    // ═══════════════════════════════════════════
+    // PHONEME DATA
+    // ═══════════════════════════════════════════
+    const VOWELS = [
+      { symbol: 'iː', speak: 'eeee', word: '<mark>ee</mark>l',    wordSpeak: 'eel',     trans: 'i larga',  examples: ['see','feet','tree','need'] },
+      { symbol: 'ɪ',  speak: 'ih',   word: 's<mark>i</mark>t',    wordSpeak: 'sit',     trans: 'i corta',  examples: ['bit','win','him','fish'] },
+      { symbol: 'e',  speak: 'eh',   word: 'b<mark>e</mark>d',    wordSpeak: 'bed',     trans: 'e',        examples: ['red','let','step','pen'] },
+      { symbol: 'æ',  speak: 'aah',  word: 'c<mark>a</mark>t',    wordSpeak: 'cat',     trans: 'entre a/e', examples: ['bad','man','black','hat'] },
+      { symbol: 'ɑː', speak: 'ahhh', word: 'f<mark>a</mark>ther', wordSpeak: 'father',  trans: 'a larga',  examples: ['palm','car','start','bar'] },
+      { symbol: 'ɒ',  speak: 'oh',   word: 'h<mark>o</mark>t',    wordSpeak: 'hot',     trans: 'o breve',  examples: ['dog','not','stop','lot'] },
+      { symbol: 'ɔː', speak: 'awww', word: 'l<mark>aw</mark>',    wordSpeak: 'law',     trans: 'o larga',  examples: ['all','more','door','floor'] },
+      { symbol: 'ʊ',  speak: 'uh',   word: 'b<mark>oo</mark>k',   wordSpeak: 'book',    trans: 'u corta',  examples: ['put','good','wood','full'] },
+      { symbol: 'uː', speak: 'oooo', word: 'f<mark>oo</mark>d',   wordSpeak: 'food',    trans: 'u larga',  examples: ['blue','moon','shoe','two'] },
+      { symbol: 'ʌ',  speak: 'uh',   word: 'c<mark>u</mark>p',    wordSpeak: 'cup',     trans: 'a neutra', examples: ['bus','love','money','run'] },
+      { symbol: 'ɜː', speak: 'errr', word: 'b<mark>ir</mark>d',   wordSpeak: 'bird',    trans: 'e larga',  examples: ['her','word','turn','learn'] },
+      { symbol: 'ə',  speak: 'uh',   word: '<mark>a</mark>bout',  wordSpeak: 'about',   trans: 'schwa',    examples: ['the','teacher','sofa','butter'] },
+    ];
+
+    const DIPHTHONGS = [
+      { symbol: 'eɪ', speak: 'ay',   word: 'd<mark>ay</mark>',    wordSpeak: 'day',     trans: 'ei',   examples: ['rain','they','eight','say'] },
+      { symbol: 'aɪ', speak: 'eye',  word: 'n<mark>igh</mark>t',  wordSpeak: 'night',   trans: 'ai',   examples: ['my','time','fly','high'] },
+      { symbol: 'ɔɪ', speak: 'oy',   word: 'b<mark>oy</mark>',    wordSpeak: 'boy',     trans: 'oi',   examples: ['oil','noise','coin','joy'] },
+      { symbol: 'aʊ', speak: 'ow',   word: 'n<mark>ow</mark>',    wordSpeak: 'now',     trans: 'au',   examples: ['out','how','brown','town'] },
+      { symbol: 'əʊ', speak: 'oh',   word: 'g<mark>o</mark>',     wordSpeak: 'go',      trans: 'ou',   examples: ['home','boat','show','know'] },
+      { symbol: 'ɪə', speak: 'ear',  word: 'h<mark>ere</mark>',   wordSpeak: 'here',    trans: 'ie',   examples: ['ear','fear','beer','near'] },
+      { symbol: 'eə', speak: 'air',  word: 'h<mark>air</mark>',   wordSpeak: 'hair',    trans: 'ea',   examples: ['there','care','bare','share'] },
+      { symbol: 'ʊə', speak: 'oor',  word: 'p<mark>ure</mark>',   wordSpeak: 'pure',    trans: 'ua',   examples: ['tour','poor','sure','cure'] },
+    ];
+
+    const CONSONANTS = [
+      { symbol: 'p',  speak: 'p',    word: '<mark>p</mark>en',    wordSpeak: 'pen',     trans: 'p (sin voz)',   examples: ['pig','cap','play','spot'] },
+      { symbol: 'b',  speak: 'b',    word: '<mark>b</mark>ad',    wordSpeak: 'bad',     trans: 'b',             examples: ['big','lab','about','job'] },
+      { symbol: 't',  speak: 't',    word: '<mark>t</mark>en',    wordSpeak: 'ten',     trans: 't',             examples: ['top','cat','time','let'] },
+      { symbol: 'd',  speak: 'd',    word: '<mark>d</mark>og',    wordSpeak: 'dog',     trans: 'd',             examples: ['day','red','mind','bad'] },
+      { symbol: 'k',  speak: 'k',    word: '<mark>c</mark>at',    wordSpeak: 'cat',     trans: 'k',             examples: ['key','back','clock','quick'] },
+      { symbol: 'g',  speak: 'g',    word: '<mark>g</mark>et',    wordSpeak: 'get',     trans: 'g',             examples: ['big','go','flag','give'] },
+      { symbol: 'f',  speak: 'fff',  word: '<mark>f</mark>ish',   wordSpeak: 'fish',    trans: 'f',             examples: ['off','fine','leaf','phone'] },
+      { symbol: 'v',  speak: 'vvv',  word: '<mark>v</mark>oice',  wordSpeak: 'voice',   trans: 'v (sonora)',    examples: ['van','love','live','very'] },
+      { symbol: 'θ',  speak: 'th',   word: '<mark>th</mark>ink',  wordSpeak: 'think',   trans: 'th sordo',      examples: ['bath','thin','math','tooth'] },
+      { symbol: 'ð',  speak: 'th',   word: '<mark>th</mark>is',   wordSpeak: 'this',    trans: 'th sonoro',     examples: ['the','that','mother','bathe'] },
+      { symbol: 's',  speak: 'sss',  word: '<mark>s</mark>ee',    wordSpeak: 'see',     trans: 's',             examples: ['sun','miss','city','yes'] },
+      { symbol: 'z',  speak: 'zzz',  word: '<mark>z</mark>oo',    wordSpeak: 'zoo',     trans: 'z (sonora)',    examples: ['zero','his','dogs','jazz'] },
+      { symbol: 'ʃ',  speak: 'sh',   word: '<mark>sh</mark>e',    wordSpeak: 'she',     trans: 'sh',            examples: ['shoe','cash','machine','fish'] },
+      { symbol: 'ʒ',  speak: 'zh',   word: 'vi<mark>si</mark>on', wordSpeak: 'vision',  trans: 'zh',            examples: ['pleasure','beige','usual','genre'] },
+      { symbol: 'h',  speak: 'h',    word: '<mark>h</mark>at',    wordSpeak: 'hat',     trans: 'h aspirada',    examples: ['hot','behind','who','ahead'] },
+      { symbol: 'tʃ', speak: 'ch',   word: '<mark>ch</mark>in',   wordSpeak: 'chin',    trans: 'ch',            examples: ['watch','church','chat','teach'] },
+      { symbol: 'dʒ', speak: 'j',    word: '<mark>j</mark>am',    wordSpeak: 'jam',     trans: 'dj',            examples: ['judge','bridge','age','just'] },
+      { symbol: 'm',  speak: 'mmm',  word: '<mark>m</mark>an',    wordSpeak: 'man',     trans: 'm',             examples: ['map','some','him','summer'] },
+      { symbol: 'n',  speak: 'nnn',  word: '<mark>n</mark>ow',    wordSpeak: 'now',     trans: 'n',             examples: ['not','sun','nine','many'] },
+      { symbol: 'ŋ',  speak: 'ng',   word: 'si<mark>ng</mark>',   wordSpeak: 'sing',    trans: 'ng',            examples: ['ring','bank','think','long'] },
+      { symbol: 'l',  speak: 'lll',  word: '<mark>l</mark>eg',    wordSpeak: 'leg',     trans: 'l',             examples: ['let','bell','feel','play'] },
+      { symbol: 'r',  speak: 'r',    word: '<mark>r</mark>ed',    wordSpeak: 'red',     trans: 'r (americana)', examples: ['run','car','wrong','great'] },
+      { symbol: 'j',  speak: 'y',    word: '<mark>y</mark>es',    wordSpeak: 'yes',     trans: 'y',             examples: ['year','you','yet','use'] },
+      { symbol: 'w',  speak: 'w',    word: '<mark>w</mark>et',    wordSpeak: 'wet',     trans: 'w',             examples: ['win','away','when','where'] },
+    ];
+
+    // ═══════════════════════════════════════════
+    // SPEECH
+    // ═══════════════════════════════════════════
+    let currentUtterance = null;
+
+    function speak(text, onEnd) {
+      if (!window.speechSynthesis) { alert('Tu navegador no soporta síntesis de voz.'); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang  = 'en-US';
+      u.rate  = 0.8;
+      u.pitch = 1;
+      if (onEnd) u.onend = onEnd;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    }
+
+    function playPhoneme(cardEl, speakText) {
+      // Remove playing state from all cards
+      document.querySelectorAll('.phoneme-card.playing').forEach(c => c.classList.remove('playing'));
+      cardEl.classList.add('playing');
+      speak(speakText, () => cardEl.classList.remove('playing'));
+    }
+
+    function playWord(word) {
+      speak(word);
+    }
+
+    // ═══════════════════════════════════════════
+    // RENDER
+    // ═══════════════════════════════════════════
+    function renderPhonemes(data, gridId, isConsonant) {
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = data.map((ph, i) => {
+        const cls = isConsonant ? 'consonant' : '';
+        const examplesHtml = ph.examples.map(w =>
+          `<span class="ph-ex" onclick="playWord('${w}')">${w}</span>`
+        ).join('');
+
+        return `
+          <div class="phoneme-card" id="phcard-${gridId}-${i}" onclick="playPhoneme(this,'${ph.speak}')">
+            <div class="ph-top">
+              <span class="ph-symbol ${cls}">/${ph.symbol}/</span>
+              <div class="ph-play">▶</div>
+            </div>
+            <div class="ph-word ${cls}">${ph.word}</div>
+            <div class="ph-translation">${ph.trans}</div>
+            <div class="ph-examples">${examplesHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderPhonemes(VOWELS,      'grid-vowels',      false);
+    renderPhonemes(DIPHTHONGS,  'grid-diphthongs',  false);
+    renderPhonemes(CONSONANTS,  'grid-consonants',  true);
+
+    // Stop propagation on example word clicks so they don't trigger card click
+    document.querySelectorAll('.ph-ex').forEach(el => {
+      el.addEventListener('click', e => e.stopPropagation());
+    });
+  </script>
+</body>
+</html>

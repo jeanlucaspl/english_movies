@@ -116,6 +116,34 @@
       font-size: 20px;
       flex-shrink: 0;
     }
+
+    .ipa-card {
+      background: #0d1014;
+      border: 1px solid #1a2030;
+      border-radius: 14px;
+      padding: 18px 16px 18px 18px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: background 0.12s;
+    }
+    .ipa-card:active { background: #111620; }
+    .ipa-icon {
+      width: 48px; height: 48px;
+      border-radius: 10px;
+      background: #0d1620;
+      border: 1px solid #1a2a40;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: Georgia, serif;
+      font-size: 22px;
+      color: #4a9eba;
+    }
+    .ipa-info { flex: 1; }
+    .ipa-info h2 { font-size: 15px; font-weight: 600; color: var(--text); }
+    .ipa-info p  { font-size: 12px; color: var(--muted); margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -124,7 +152,19 @@
     <p>Study real movie scripts with grammar and phonetics</p>
   </header>
 
-  <div class="section-title">Available</div>
+  <div class="section-title">Referencia</div>
+  <div class="movies">
+    <a href="ipa.html" class="ipa-card">
+      <div class="ipa-icon">/ɪ/</div>
+      <div class="ipa-info">
+        <h2>Guía de Fonética IPA</h2>
+        <p>44 fonemas · audio · ejemplos por sonido</p>
+      </div>
+      <span class="chevron">›</span>
+    </a>
+  </div>
+
+  <div class="section-title">Películas</div>
 
   <div class="movies" id="movies-list">
     <a href="viewer.html?movie=patch_adams" class="movie-card" id="card-patch_adams">
