@@ -504,6 +504,9 @@
     // Analysis cache (id -> entry) used for save buttons
     let analysisCache = {};
 
+    // Last analysis result cache (avoids re-calling Gemini for same selection)
+    let lastAnalysis = null; // { key, headerText, html }
+
     // Chat history
     let chatHistory = [];
     let chatInitialized = false;
@@ -692,11 +695,23 @@
         return;
       }
 
+      const lineCount = selectedLines.size;
+      const selectionKey = [...selectedLines].sort((a, b) => a - b).join(',');
+
+      // Reuse cached result if same selection
+      if (lastAnalysis && lastAnalysis.key === selectionKey) {
+        document.getElementById('sheet-line').textContent = lastAnalysis.headerText;
+        document.getElementById('sheet-body').innerHTML   = lastAnalysis.html;
+        document.getElementById('overlay').classList.add('on');
+        document.getElementById('sheet').classList.add('on');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
       const fab = document.getElementById('fab-analyze');
       fab.disabled = true;
       document.getElementById('fab-count').textContent = '...';
 
-      const lineCount = selectedLines.size;
       // Open sheet immediately with loading state
       document.getElementById('sheet-line').textContent = `Analizando ${lineCount} línea${lineCount > 1 ? 's' : ''}...`;
       document.getElementById('sheet-body').innerHTML   = `<div class="loading-state"><span class="loading-dots">Consultando Gemini</span></div>`;
@@ -708,8 +723,11 @@
         const lines   = [...selectedLines].map(id => allLines.find(l => l.id === id)).filter(Boolean);
         const results = await analyzeLines(lines);
 
-        document.getElementById('sheet-line').textContent = `Análisis · ${lineCount} línea${lineCount > 1 ? 's' : ''}`;
-        document.getElementById('sheet-body').innerHTML   = buildAnalysisSheetHTML(results);
+        const headerText = `Análisis · ${lineCount} línea${lineCount > 1 ? 's' : ''}`;
+        const html       = buildAnalysisSheetHTML(results);
+        document.getElementById('sheet-line').textContent = headerText;
+        document.getElementById('sheet-body').innerHTML   = html;
+        lastAnalysis = { key: selectionKey, headerText, html };
       } catch (err) {
         document.getElementById('sheet-body').innerHTML =
           `<div class="loading-state" style="color:var(--red)">Error: ${esc(err.message)}</div>`;
